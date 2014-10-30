@@ -6,6 +6,8 @@ class Tableau(object):
         
     point_dict = {17:2, 18:3, 19:4, 20:5, 21:7}
     point_dict.update({i:1 for i in xrange(17)})
+    hands = ([1,2,3,4,5], [6,7,8,9,10], [11,12,13], [14,15,16], [1,6], [2,7,11,14], [3,8,12,15], [4,9,13,16], [5,10])
+
     
     def __init__(self):
         self.t = [Spot(i) for i in xrange(1,17)]
@@ -19,37 +21,27 @@ class Tableau(object):
         return s
     
     def __setitem__(self, pos, card):
-        self.t[pos] = card
-    
-    #def __getitem__(self, pos):
-    #    return self.t[pos].get_card()
+        self.t[pos - 1] = card
     
     def calc_score_simple(self):
-        pass
+        tot = 0
+        for hand in self.hands:
+            print "calc score for hand: ", hand
+            res = self.calc_score_from_values(self.get_hand_values(hand))
+            print "res: ", res
+            tot += res
+        return tot
+        #return sum([self.calc_score_from_values(self.get_hand_values(hand)) for hand in self.hands])
     
-    def calc_score_advanced(self):
-        pass
+    def get_hand_values(self, hand):
+        values = self.to_values()        
+        return [values[i-1] for i in hand if values[i-1] > 0]
     
-    def calc_hand_score(self, hand):
-        """ 
-        Calculates the score of a given hand.
-        A hand is a list of positions (ints)
-        """
-                
-        hand_spots = [self[pos] for pos in hand]
-        hand_len = sum(map(bool, hand_spots))                             
-        hand_sum = sum([spot.get_card().get_value() for spot in hand_spots])
+    def get_hand_score(self, hand): 
+        values = self.get_hand_values()
+        n_aces = values.count(1)
         
-        if hand_sum > 21:
-            return 0
-        
-        elif hand_sum == 21 and hand_len == 2:
-            return 10
-        
-        return self.point_dict[hand_sum]
-    
-    def calc_score_from_values(self, values):
-        
+    def calc_score_from_values(self, values):        
         tot = sum(values)
         if tot > 21:
             return 0
@@ -60,6 +52,12 @@ class Tableau(object):
     
     def to_values(self):
         return [self.t[i].get_value() for i in xrange(len(self.t))]
+    
+    def get_value_options(self):
+        pass
+    
+    def calc_score_advanced(self):
+        pass
                                                       
             
 class Spot(object):
@@ -67,10 +65,7 @@ class Spot(object):
     def __init__(self, pos, card = None):
         self.pos = pos
         self.card = card
-    
-    #def get_card(self):
-    #    return self.card
-    
+
     def __str__(self):
         if self.card:
             return str(self.card)
@@ -84,10 +79,8 @@ class Spot(object):
             return self.card.get_value()
         return 0
         
-        
 class Game(object):
 
-    
     def __init__(self):
         self.deck = Deck()
         self.deck.shuffle()
@@ -95,7 +88,8 @@ class Game(object):
 
     def play(self):
         
-        print self.tableau
+        self.tableau[1] = Card(13,'h')
+        self.tableau.calc_score_simple()
 
         while True:
             break
@@ -110,3 +104,5 @@ class Game(object):
 if __name__=="__main__":
     g = Game()
     g.play()
+    
+    
