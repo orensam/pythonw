@@ -23,23 +23,48 @@ class Tableau(object):
     def __setitem__(self, pos, card):
         self.t[pos - 1] = card
     
-    def calc_score_simple(self):
-        tot = 0
-        for hand in self.hands:
-            print "calc score for hand: ", hand
-            res = self.calc_score_from_values(self.get_hand_values(hand))
-            print "res: ", res
-            tot += res
-        return tot
-        #return sum([self.calc_score_from_values(self.get_hand_values(hand)) for hand in self.hands])
+    def calc_score_simple(self):        
+        return sum([self.calc_hand_score_simple(hand) for hand in self.hands])
     
-    def get_hand_values(self, hand):
-        values = self.to_values()        
-        return [values[i-1] for i in hand if values[i-1] > 0]
-    
-    def get_hand_score(self, hand): 
-        values = self.get_hand_values()
-        n_aces = values.count(1)
+    def get_hand_values(self, hand, values):
+        return [values[i-1] for i in hand]
+        
+    def calc_hand_score_simple(self, hand):
+        hand_values = self.get_hand_values(hand, self.to_values())
+        regular_score = self.calc_score_from_values(hand_values)        
+        ace_bonus_score = 0
+        
+        if 1 in hand_values:
+            pos = hand_values.index(1)        
+            hand_values[pos] = 11
+            ace_bonus_score = self.calc_score_from_values(hand_values)
+            
+        return max(regular_score, ace_bonus_score)
+
+    def calc_score_advanced(self):
+        values = self.to_values()
+        possible_scores = []
+        for values_option in self.gen_value_options(self.to_values()):
+            score = sum([self.calc_hand_score_advanced(hand, values_option) for hand in self.hands])
+            possible_scores.append(score)
+        return max(possible_scores)
+        
+    def calc_hand_score_advanced(self, hand, values):        
+        """
+        Given a value list (of length 16) and a hand (positions in the value list),
+        calculate the score of the hand.
+        """
+        hand_values = self.get_hand_values(hand, values)
+        return self.calc_score_from_values(hand_values)        
+
+    def gen_value_options(self, values):
+       	if len(values) == 0:
+            yield []
+        else:
+            for val in self.gen_value_options(values[1:]):
+                yield [values[0]] + val
+                if values[0] == 1:
+                    yield [11] + val
         
     def calc_score_from_values(self, values):        
         tot = sum(values)
@@ -51,13 +76,9 @@ class Tableau(object):
             return self.point_dict[tot]
     
     def to_values(self):
-        return [self.t[i].get_value() for i in xrange(len(self.t))]
-    
-    def get_value_options(self):
-        pass
-    
-    def calc_score_advanced(self):
-        pass
+        return [self.t[i].get_value() for i in xrange(len(self.t))]   
+
+            
                                                       
             
 class Spot(object):
@@ -88,8 +109,12 @@ class Game(object):
 
     def play(self):
         
-        self.tableau[1] = Card(13,'h')
-        self.tableau.calc_score_simple()
+        self.tableau[1] = Card(1,'s')
+        self.tableau[2] = Card(8,'h')
+        self.tableau[6] = Card(1,'h')
+        self.tableau[7] = Card(8,'d')
+        print self.tableau.calc_score_simple()
+        print self.tableau.calc_score_advanced()
 
         while True:
             break
