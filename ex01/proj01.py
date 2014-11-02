@@ -6,7 +6,7 @@ blackjack hands worth as many points as possible on a board with
 a special array of rows and colums.
 """
 
-from cards import Card, Deck
+from cards import Deck
 
 class Tableau(object):
     """
@@ -126,6 +126,13 @@ class Tableau(object):
     def pos_full(self, pos):
         """ Return True iff position pos is occupied """
         return bool(self[pos])
+    
+    def is_full(self):
+        for i in xrange(self.start, self.board_end + 1):
+            if not self.pos_full(i):
+                return False
+        return True
+                
             
 class Spot(object):
     """ Represents a spot on the tableau """
@@ -158,7 +165,14 @@ class Game(object):
     
     # Messages
     __str_cards = "Tableau:\n%s\n\nDiscards: %4s %4s %4s %4s\n"
-    __str_options = "Choose an option: d - draw a card, s - simple calculation, a - advanced calculation, q - quit: "
+    __str_option_draw = "d - draw a card"
+    __str_option_simple = "s - simple calculation"
+    __str_option_advanced = "a - advanced calculation"
+    __str_option_quit = "q - quit"
+    __str_choose = "Choose an option"
+    __str_options_all =  "%s: %s, %s, %s, %s: " % (__str_choose, __str_option_draw, __str_option_simple, __str_option_advanced, __str_option_quit)
+    __str_options_short = "%s: %s, %s, %s: " % (__str_choose, __str_option_simple, __str_option_advanced, __str_option_quit)
+
     __str_calc_simple = "The total score (simple algorithm) is: %2s"
     __str_calc_advanced = "The total score (advanced algorithm) is: %2s"
     __str_card_dealt = "Card dealt: %4s"
@@ -188,13 +202,20 @@ class Game(object):
         self._print_cards()
         
         while True:
+            
             # Ask user what to do
-            inp = raw_input(self.__str_options)
-            print
-            if inp in self.__option_quit:
+            if self._tableau.is_full():
+                inp = raw_input(self.__str_options_short)
+            else:
+                inp = raw_input(self.__str_options_all)
+            
+            if len(inp) == 0:
+                print self.__str_err_invalid_choice
+            elif inp in self.__option_quit:
                 break;
             elif inp in self.__option_deal:
                 self._play_step()
+                print
                 self._print_cards()
             elif inp in self.__option_calc_simple:
                 print self.__str_calc_simple % self._tableau.calc_score_simple()
