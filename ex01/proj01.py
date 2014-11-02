@@ -10,7 +10,7 @@ from cards import Deck
 
 class Tableau(object):
     """
-    This vlass represents the tableau - the game's playing board.
+    This class represents the tableau - the game's playing board.
     Its interface allows getting and setting cards in the different positions,
     and calculate the simple and advanced score values.
     """
@@ -28,7 +28,8 @@ class Tableau(object):
     __blackjack_value = 21
     __ace_base_val = 1
     __ace_alt_val = 11
-    __hands = ([1,2,3,4,5], [6,7,8,9,10], [11,12,13], [14,15,16], [1,6], [2,7,11,14], [3,8,12,15], [4,9,13,16], [5,10])
+    __hands = ([1,2,3,4,5], [6,7,8,9,10], [11,12,13], [14,15,16], \
+               [1,6], [2,7,11,14], [3,8,12,15], [4,9,13,16], [5,10])
 
     def __init__(self):
         """ Initialize an empty tableau """
@@ -170,8 +171,10 @@ class Game(object):
     __str_option_advanced = "a - advanced calculation"
     __str_option_quit = "q - quit"
     __str_choose = "Choose an option"
-    __str_options_all =  "%s: %s, %s, %s, %s: " % (__str_choose, __str_option_draw, __str_option_simple, __str_option_advanced, __str_option_quit)
-    __str_options_short = "%s: %s, %s, %s: " % (__str_choose, __str_option_simple, __str_option_advanced, __str_option_quit)
+    __str_options_all =  "%s: %s, %s, %s, %s: " % (__str_choose, __str_option_draw, __str_option_simple, \
+                                                   __str_option_advanced, __str_option_quit)
+    __str_options_short = "%s: %s, %s, %s: " % (__str_choose, __str_option_simple, __str_option_advanced, \
+                                                __str_option_quit)
 
     __str_calc_simple = "The total score (simple algorithm) is: %2s"
     __str_calc_advanced = "The total score (advanced algorithm) is: %2s"
