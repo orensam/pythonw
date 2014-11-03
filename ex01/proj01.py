@@ -52,7 +52,7 @@ class Tableau(object):
     
     def __setitem__(self, pos, card):
         """ Set position pos to given card """
-        self._spots[pos - 1] = card
+        self._spots[pos - 1] = Spot(pos, card)
     
     def calc_score_simple(self):
         """ Calculate the simple score """
@@ -64,7 +64,6 @@ class Tableau(object):
         
     def _calc_hand_score_simple(self, hand):
         """ Hand score calculation for use in the simple algorithm """
-        
         hand_values = self._get_hand_values(hand, self._to_values())
         regular_score = self._calc_score_from_values(hand_values)        
         ace_bonus_score = 0
@@ -80,7 +79,6 @@ class Tableau(object):
 
     def calc_score_advanced(self):
         """ Calculate the advanced score """
-        
         possible_scores = []        
         for values_option in self._gen_value_options(self._to_values()):
             # Iterate the possible value arrays, and return the maximum possible.
@@ -101,6 +99,7 @@ class Tableau(object):
         Generates the possible value arrays from the given value list.
         i.e genrates all the combinations of value lists for the two ace values.
         e.g if values is [1,3,1], the output will be [ [1,3,1], [1,3,11], [11,3,1], [11,3,11] ]
+        Note: This is a recursive generator.
         """
         if len(values) == 0:
             yield []
@@ -129,12 +128,15 @@ class Tableau(object):
         return bool(self[pos])
     
     def is_full(self):
+        """
+        Returns True iff the all positions on the tableau are full
+        (not including discard spots)
+        """
         for i in xrange(self.start, self.board_end + 1):
             if not self.pos_full(i):
                 return False
         return True
-                
-            
+
 class Spot(object):
     """ Represents a spot on the tableau """
     
@@ -175,7 +177,6 @@ class Game(object):
                                                    __str_option_advanced, __str_option_quit)
     __str_options_short = "%s: %s, %s, %s: " % (__str_choose, __str_option_simple, __str_option_advanced, \
                                                 __str_option_quit)
-
     __str_calc_simple = "The total score (simple algorithm) is: %2s"
     __str_calc_advanced = "The total score (advanced algorithm) is: %2s"
     __str_card_dealt = "Card dealt: %4s"
@@ -201,17 +202,13 @@ class Game(object):
 
     def play(self):
         """ Starts the game """
-        
         self._print_cards()
-        
         while True:
-            
             # Ask user what to do
             if self._tableau.is_full():
                 inp = raw_input(self.__str_options_short)
             else:
                 inp = raw_input(self.__str_options_all)
-            
             if len(inp) == 0:
                 print self.__str_err_invalid_choice
             elif inp in self.__option_quit:
@@ -241,29 +238,22 @@ class Game(object):
 
     def _get_pos_from_user(self):
         """ Get a (valid) board position from the user """
-        
         while True:
             # Iterate until value is valid
             inp = raw_input(self.__str_choose_loc)
-
             try:
                 pos = int(inp)
             except ValueError:
                 print self.__str_err_nint
                 continue
-
             if pos < self._tableau.start or pos > self._tableau.end:
                 print self.__str_err_oor
                 continue
-
             if self._tableau.pos_full(pos):
                 print self.__str_err_pos_full 
                 continue
-
             return pos
 
 if __name__=="__main__":
     g = Game()
     g.play()
-    
-    
