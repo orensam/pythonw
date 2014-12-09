@@ -3,22 +3,19 @@ ILLEGAL_MOVE = "Error: Illegal move"
 
 
 class Tile:
-    
+        
     def __init__(self, pos, right, left):
         self.pos = pos
-        self.right = right
         self.left = left
+        self.right = right
+    
+    def __lt__(self, other):
+        return self.pos < other.pos
         
-    
-
-
-class DoubleSix:
-    
+class DoubleSix:    
     def __init__(self, tiles):
         self.tiles = tiles[:]
         
-
-
 class LOP:
     
     def __init__(self):
@@ -35,38 +32,49 @@ class Player(object):
     def __init__(self, pid, name, tiles):
         self._id = pid
         self._name = name
-        self.tiles = sorted(tiles, key = lambda tile : tile.pos)
-        
+        self.tiles = tiles
+        tiles.sort()
 
-class HumanPlayer(Player):
-    
+class HumanPlayer(Player):    
     def __init__(self, pid, name, skill, tiles):
         super(HumanPlayer, self).__init__(pid, name, tiles)
     
-class CompPlayer(Player):
-    
-    def __init__(self, pid, name, tiles, skill):
+class CompPlayer(Player):    
+    def __init__(self, pid, name, tiles):
         super(HumanPlayer, self).__init__(pid, name, tiles)
-        self._skill = skill
+
+class CompPlayerEasy(CompPlayer):
+    def __init__(self, pid, name, tiles):
+        super(CompPlayerEasy, self).__init__(pid, name, tiles)
+
+class CompPlayerMedium(CompPlayer):
+    def __init__(self, pid, name, tiles):
+        super(CompPlayerMedium, self).__init__(pid, name, tiles)    
         
         
 class Game:
+    
     def __init__(self):
+        self.n_players = 0
         self._players = {}
-
+    
+    def line_to_tiles(self, line):
+        tiles = []
+        tile_strs = [x.strip() for x in line.split('-')]
+        for ts in tile_strs:
+            tints = ts.split(',')
+            tiles.append(Tile(tints[0], tints[1], tints[2]))
+            
     def parse_file(self, file_path):
         lines = open(file_path).readlines()
-        
         is_big_comment = False
         is_docstring = False
         res = []
         
         for line in lines:
-            
+            # Handle single line
             new_line = ""
-            
             while line:                
-                
                 # Handle big comments
                 if is_big_comment:
                     idx = line.find('*/')
@@ -74,7 +82,7 @@ class Game:
                         line = line[idx+2:] 
                         is_big_comment = False
                     else:
-                        new_line = ""
+                        break
 
                 elif is_docstring:
                     idx = line[3:].find('"""')
@@ -82,40 +90,68 @@ class Game:
                         line = line[idx+3:]
                         is_docstring = False
                     else:
-                        new_line = ""
+                        break
 
-                elif line.startswith('/**', '/*'):
+                elif line.startswith(('/**', '/*')):
                     is_big_comment = True     
                 
                 elif line.startswith('"""'):
                     line = line[3:]
                     is_docstring = True
                 
+                elif line.startswith('//'):
+                    break
+                
+                elif line.startswith('#'):
+                    break
+                
                 else:                    
-                    # Handle regular comments
-                    c = line.find('#')
-                    if c >= 0:
-                        new_line = line[:c]
+                    com_start = set([line.find('#'), line.find('//'), line.find('/*'), line.find('/**'), line.find('"""')])
+                    com_start.remove(-1)
+                    if com_start:
+                        idx = min(com_start)
+                        new_line += line[:idx]
+                        line = line[idx:]
+                    else:
+                        new_line = line
                         line = ""
-                    
-                    c = line.find('//')
-                    if c >= 0:
-                        new_line = line[:c]
-                        line = ""
-                
-                    new_line = line
-                
+                        
+            new_line = new_line.strip()
             if new_line:
                 res.append(new_line)
+            # end handle single line
+        
+        tiles = []
+        for line in res:
+            tiles += self.line_to_tiles(line)
+            
+        return tiles
+        
                
 
     def add_player(self, pid, name, is_human, skill, tiles):
         if is_human:
             self.players[pid] = HumanPlayer(pid, name, tiles)
+        elif skill == 'e':
+            self.players[pid] = CompPlayerEasy(pid, name, tiles)
         else:
-            self.players[pid] = CompPlayer(pid, name, tiles, skill)
+            self.players[pid] = CompPlayerMedium(pid, name, tiles)
+        self.n_players += 1
+    
+    def game_over(self):
+        pass
+    
+    def play(self):
         
-
+        for player in self._players:
+            if self.game_over():
+                break
+            if not self.can_play(player.pid):
+                continue
+            
+            
+            
+        
     def setup(self):
         print "Welcome to Domino!"
     
