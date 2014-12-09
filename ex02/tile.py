@@ -52,13 +52,6 @@ class LOP:
     def __str__(self):
         return ' '.join([t.str_lop() for t in self._tiles])
 
-    def can_put(self, tile):
-        if not self._tiles:
-            return True
-        if set((self.get_end(), self.get_start())).intersection(set((tile.left, tile.right))):
-            return True
-        return False
-
     def can_put_at_pos(self, num, pos):
         if not self._tiles:
             return True

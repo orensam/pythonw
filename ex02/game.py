@@ -83,9 +83,6 @@ class Game:
 
         return tiles
 
-    def is_legal_move(self, tile, lop_pos):
-        return self.lop.can_put_at_pos(tile.left, lop_pos) or self.lop.can_put_at_pos(tile.right, lop_pos)
-
     def put_tile(self, tile, lop_pos):
         self.lop.put_tile(tile, lop_pos)
 
@@ -114,7 +111,7 @@ class Game:
     def can_play(self, pid):
         p = self.get_player(pid)
         for t in p.tiles:
-            if self.lop.can_put(t):
+            if self.lop.can_put_at_pos(t, 's') or self.lop.can_put_at_pos(t, 'e') :
                 return True
 
         if not self.ds.is_empty():

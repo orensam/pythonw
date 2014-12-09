@@ -34,7 +34,7 @@ class HumanPlayer(Player):
     def get_move(self):
         tile_number, lop_pos = self.get_input()
         tile = self.tiles[tile_number-1]
-        while not self.game.is_legal_move(tile, lop_pos):
+        while not self.game.lop.can_put_at_pos(tile, lop_pos):
             print ILLEGAL_MOVE
             tile_number, lop_pos = self.get_input()
             tile = self.tiles[tile_number-1]
