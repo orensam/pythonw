@@ -45,6 +45,9 @@ class LOP:
 
     def empty(self):
         return len(self._tiles) == 0
+    
+    def get_tiles(self):
+        return self._tiles[:]
 
     def add_at_start(self, tile):
         if tile.right != self.get_start():
@@ -55,3 +58,4 @@ class LOP:
         if tile.left != self.get_end():
             tile.flip()
         self._tiles.insert(len(self._tiles), tile)
+        

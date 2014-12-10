@@ -1,6 +1,12 @@
 from tile import Tile, LOP, DoubleSix
 from players import HumanPlayer, CompPlayerEasy, CompPlayerMedium
 
+WELCOME = "Welcome to Domino!"
+GET_PATH = "'tile' file path: "
+GET_N_PLAYERS = "number of players (1-4): "
+DRAW = "It's a draw!"
+GET_COMP_SKILL = "Computer skill: Easy (e), Medium (m): "
+
 class Game:
 
     def __init__(self):
@@ -112,7 +118,10 @@ class Game:
 
     def add_tile_at_end(self, tile):
         self.lop.add_at_end(tile)
-
+    
+    def get_lop_tiles(self):
+        return self.lop.get_tiles()
+    
     def add_player(self, pid, name, is_human, skill, tiles):
         if is_human:
             self._players[pid] = HumanPlayer(pid, name, tiles, self)
@@ -194,17 +203,19 @@ class Game:
                 return
         # If no player won and iteration ended,
         # It means no player can play, i.e draw
-        print "It's a draw!"
+        print DRAW
 
+
+    
     def setup(self):
-        print "Welcome to Domino!"
+        print WELCOME
 
-        file_path = raw_input("'tile' file path: ")
+        file_path = raw_input(GET_PATH)
 
         # In this case, file_parser() should return iterable data structure (later we will access tiles[i])
         tiles = self.parse_file(file_path)
 
-        num_of_players = raw_input("number of players (1-4): ")
+        num_of_players = raw_input(GET_N_PLAYERS)
 
         for i in xrange(int(num_of_players)):
             pid = i + 1
@@ -213,5 +224,5 @@ class Game:
             p_tiles.sort(key = lambda t : t[0])
             player_tiles = [Tile(t[1], t[2]) for t in p_tiles]
             self.add_player(pid, player_name, True if is_human == 'y' else False,
-                            raw_input("Computer skill: Easy (e), Medium (m): ") if is_human == 'n' else "", player_tiles)
+                            raw_input(GET_COMP_SKILL) if is_human == 'n' else "", player_tiles)
         self.ds = DoubleSix([Tile(t[1], t[2]) for t in tiles[(i + 1) * 7:]])

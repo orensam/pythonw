@@ -1,5 +1,8 @@
 CHOOSE_ACTION = "Choose action: Tile (t) or Draw (d): "
 ILLEGAL_MOVE = "Error: Illegal move"
+CHOOSE_TILE = "Choose tile (1-%d), and place (Start - s, End - e): "
+
+ILLEGAL_MOVE_SCORE = 3
 
 class Player(object):
 
@@ -28,7 +31,7 @@ class HumanPlayer(Player):
         super(HumanPlayer, self).__init__(pid, name, tiles, game)
 
     def get_input(self):
-        inp = raw_input("Choose tile (1-%d), and place (Start - s, End - e): " % len(self.tiles))
+        inp = raw_input(CHOOSE_TILE % len(self.tiles))
         return int(inp.split()[0]), inp.split()[1]
 
     def get_move(self):
@@ -77,3 +80,57 @@ class CompPlayerEasy(CompPlayer):
 class CompPlayerMedium(CompPlayer):
     def __init__(self, pid, name, tiles, game):
         super(CompPlayerMedium, self).__init__(pid, name, tiles, game)
+    
+    def move(self):
+
+        lop = self.game.get_lop_tiles()
+        
+        # A move is consists of a tile number (1-T) and a position (s/e).
+        # This 'default value' is for clarification only
+        move_scores = {}
+        
+        # best_move = (0, '')  
+        # best_move_score = float('inf')
+        
+        for i, t in enumerate(self.tiles):
+            tile_number = i + 1
+            low = min([t.right, t.left])
+            high = max([t.right, t.left])
+            move_scores[(tile_number, )]
+
+            m = (tile_number, 'e')
+            if self.game.can_put_num_at_end(low):
+                move_scores[m] = self.calc_move_score(m)
+            else
+                move_scores[m] = ILLEGAL_MOVE_SCORE    
+            
+            m = (tile_number, 's')
+            if self.game.can_put_num_at_start(low):
+                move_scores[m] = self.calc_move_score(m)
+            
+            
+            
+            
+            elif self.game.can_put_num_at_start(low):
+                m = (tile_number, 's')
+                move_scores[m] = self.calc_move_score(m)                
+            elif self.game.can_put_num_at_end(high):
+                m = (tile_number, 'e')
+                return self.put_tile(tile_number, 'e')
+            elif self.game.can_put_num_at_start(high):
+                return self.put_tile(tile_number, 's')
+            
+        
+        
+        if best_move_score > 2:
+            self.draw_from_deck()
+            return
+    
+    
+    
+    
+    
+    
+    
+    
+    
