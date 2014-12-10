@@ -83,8 +83,35 @@ class Game:
 
         return tiles
 
-    def put_tile(self, tile, lop_pos):
-        self.lop.put_tile(tile, lop_pos)
+    def can_put_tile_at_pos(self, tile, pos):
+        if pos in 'sS':
+            return self.can_put_tile_at_start(tile)
+        else:
+            return self.can_put_tile_at_end(tile)
+
+    def can_put_tile_at_start(self, tile):
+        return self.lop.empty() or self.lop.get_start() in (tile.left, tile.right)
+
+    def can_put_tile_at_end(self, tile):
+        return self.lop.empty() or self.lop.get_end() in (tile.left, tile.right)
+
+    def can_put_num_at_start(self, num):
+        return self.lop.empty() or self.lop.get_start() == num
+
+    def can_put_num_at_end(self, num):
+        return self.lop.empty() or self.lop.get_end() == num
+
+    def add_tile_at_pos(self, tile, pos):
+        if pos in 'sS':
+            self.add_tile_at_start(tile)
+        else:
+            self.add_tile_at_end(tile)
+
+    def add_tile_at_start(self, tile):
+        self.lop.add_at_start(tile)
+
+    def add_tile_at_end(self, tile):
+        self.lop.add_at_end(tile)
 
     def add_player(self, pid, name, is_human, skill, tiles):
         if is_human:
@@ -111,13 +138,9 @@ class Game:
     def can_play(self, pid):
         p = self.get_player(pid)
         for t in p.tiles:
-            if self.lop.can_put_at_pos(t, 's') or self.lop.can_put_at_pos(t, 'e') :
+            if self.can_put_tile_at_start(t) or self.can_put_tile_at_end(t):
                 return True
-
-        if not self.ds.is_empty():
-            return True
-
-        return False
+        return not self.ds.empty()
 
     def step(self, pid):
         p = self.get_player(pid)

@@ -20,7 +20,7 @@ class Player(object):
         return [(t.left, t.right) for t in self.tiles]
 
     def put_tile(self, tile_number, lop_pos):
-        self.game.put_tile(self.tiles[tile_number - 1], lop_pos)
+        self.game.add_tile_at_pos(self.tiles[tile_number - 1], lop_pos)
         self.tiles.pop(tile_number-1)
 
 class HumanPlayer(Player):
@@ -34,8 +34,7 @@ class HumanPlayer(Player):
     def get_move(self):
         tile_number, lop_pos = self.get_input()
         tile = self.tiles[tile_number-1]
-        while not self.game.lop.can_put_at_pos(tile.left, lop_pos) \
-                and not self.game.lop.can_put_at_pos(tile.right, lop_pos):
+        while not self.game.can_put_tile_at_pos(tile, lop_pos):
             print ILLEGAL_MOVE
             tile_number, lop_pos = self.get_input()
             tile = self.tiles[tile_number-1]
@@ -63,18 +62,15 @@ class CompPlayerEasy(CompPlayer):
             tile_number = i + 1
             low = min([t.right, t.left])
             high = max([t.right, t.left])
-            if self.game.lop.can_put_at_pos(low, 'e'):
-                self.put_tile(tile_number, 'e')
-                return
-            elif self.game.lop.can_put_at_pos(low, 's'):
-                self.put_tile(tile_number, 's')
-                return
-            elif self.game.lop.can_put_at_pos(high, 'e'):
-                self.put_tile(tile_number, 'e')
-                return
-            elif self.game.lop.can_put_at_pos(high, 's'):
-                self.put_tile(tile_number, 's')
-                return
+            if self.game.can_put_num_at_end(low):
+                return self.put_tile(tile_number, 'e')
+            elif self.game.can_put_num_at_start(low):
+                return self.put_tile(tile_number, 's')
+            elif self.game.can_put_num_at_end(high):
+                return self.put_tile(tile_number, 'e')
+            elif self.game.can_put_num_at_start(high):
+                return self.put_tile(tile_number, 's')
+
         self.draw_from_deck()
 
 
