@@ -45,9 +45,16 @@ class LOP:
 
     def empty(self):
         return len(self._tiles) == 0
-    
-    def get_tiles(self):
-        return self._tiles[:]
+
+    def get_size(self):
+        return len(self._tiles)
+
+    def get_stats(self):
+        stats = {i:0 for i in range(7)}
+        for t in self._tiles:
+            stats[t.left] += 1
+            if t.right != t.left:
+                stats[t.right] += 1
 
     def add_at_start(self, tile):
         if tile.right != self.get_start():

@@ -6,8 +6,21 @@ GET_PATH = "'tile' file path: "
 GET_N_PLAYERS = "number of players (1-4): "
 DRAW = "It's a draw!"
 GET_COMP_SKILL = "Computer skill: Easy (e), Medium (m): "
+GET_PLAYER_NAME = "player %s name: "
+GET_IS_HUMAN = "Human player (y/n): "
+PLAYER_WON = "Player %s, %s wins!"
+YES = 'y'
+NO = 'n'
+
+
+HAND_SIZE = 7
+DECK_SIZE = 28
+
 
 class Game:
+
+    LOP_START = 's'
+    LOP_END = 'e'
 
     def __init__(self):
         self.n_players = 0
@@ -90,37 +103,38 @@ class Game:
         return tiles
 
     def can_put_tile_at_pos(self, tile, pos):
-        if pos in 'sS':
-            return self.can_put_tile_at_start(tile)
-        else:
-            return self.can_put_tile_at_end(tile)
+        if self.lop.empty():
+            return True
+        elif pos == self.LOP_START:
+            return self.lop.get_start() in (tile.left, tile.right)
+        elif pos == self.LOP_END:
+            return self.lop.get_end() in (tile.left, tile.right)
 
-    def can_put_tile_at_start(self, tile):
-        return self.lop.empty() or self.lop.get_start() in (tile.left, tile.right)
-
-    def can_put_tile_at_end(self, tile):
-        return self.lop.empty() or self.lop.get_end() in (tile.left, tile.right)
-
-    def can_put_num_at_start(self, num):
-        return self.lop.empty() or self.lop.get_start() == num
-
-    def can_put_num_at_end(self, num):
-        return self.lop.empty() or self.lop.get_end() == num
+    def can_put_num_at_pos(self, num, pos):
+        if self.lop.empty():
+            return True
+        elif pos == self.LOP_START:
+            return self.lop.get_start() == num
+        elif pos == self.LOP_END:
+            return self.lop.get_end() == num
 
     def add_tile_at_pos(self, tile, pos):
-        if pos in 'sS':
-            self.add_tile_at_start(tile)
-        else:
-            self.add_tile_at_end(tile)
-
-    def add_tile_at_start(self, tile):
-        self.lop.add_at_start(tile)
-
-    def add_tile_at_end(self, tile):
-        self.lop.add_at_end(tile)
+        if pos == self.LOP_START:
+            self.lop.add_at_start(tile)
+        elif pos == self.LOP_END:
+            self.lop.add_at_end(tile)
     
-    def get_lop_tiles(self):
-        return self.lop.get_tiles()
+    def get_lop_stats(self):
+        return self.lop.get_stats()
+
+    def get_lop_size(self):
+        return self.lop.get_len()
+
+    def get_lop_start(self):
+        return self.lop.get_start()
+
+    def get_lop_end(self):
+        return self.lop.get_end()
     
     def add_player(self, pid, name, is_human, skill, tiles):
         if is_human:
@@ -151,12 +165,15 @@ class Game:
                 return True
         return not self.ds.empty()
 
-    def step(self, pid):
+    def step(self, pid, is_first_move):
         p = self.get_player(pid)
-        print "Turn of " + p.name + " to play, player " + str(pid) + ":"
-        print "Hand :: " + p.hand_str()
-        print "LOP  :: " + str(self.lop)
-        p.move()
+        if is_first_move:
+            p.first_move()
+        else:
+            print "Turn of " + p.name + " to play, player " + str(pid) + ":"
+            print "Hand :: " + p.hand_str()
+            print "LOP  :: " + str(self.lop)
+            p.move()
 
     def chose_first_player(self):
         player_tiles = {pid:self.get_player(pid).get_tile_tups() for pid in self.get_pids()}
@@ -196,10 +213,13 @@ class Game:
 
 
     def play(self):
+        is_first_move = True
         for pid in self.player_iter():
-            self.step(pid)
+            self.step(pid, is_first_move)
+            is_first_move = False
             if self.player_won(pid):
-                print "Player " + str(pid) + ", " + self.get_player(pid).name + " wins!"
+                print
+                print PLAYER_WON %(str(pid), self.get_player(pid).name)
                 return
         # If no player won and iteration ended,
         # It means no player can play, i.e draw
@@ -219,10 +239,10 @@ class Game:
 
         for i in xrange(int(num_of_players)):
             pid = i + 1
-            player_name, is_human = raw_input("player " + str(pid) + " name: "), raw_input("Human player (y/n): ")
-            p_tiles = tiles[i * 7:(i + 1) * 7]
+            player_name, is_human = raw_input(GET_PLAYER_NAME %str(pid)), raw_input(GET_IS_HUMAN).lower()
+            p_tiles = tiles[i * HAND_SIZE:(i + 1) * HAND_SIZE]
             p_tiles.sort(key = lambda t : t[0])
             player_tiles = [Tile(t[1], t[2]) for t in p_tiles]
-            self.add_player(pid, player_name, True if is_human == 'y' else False,
-                            raw_input(GET_COMP_SKILL) if is_human == 'n' else "", player_tiles)
-        self.ds = DoubleSix([Tile(t[1], t[2]) for t in tiles[(i + 1) * 7:]])
+            self.add_player(pid, player_name, True if is_human == YES else False,
+                            raw_input(GET_COMP_SKILL) if is_human == NO else "", player_tiles)
+        self.ds = DoubleSix([Tile(t[1], t[2]) for t in tiles[(i + 1) * HAND_SIZE:]])
