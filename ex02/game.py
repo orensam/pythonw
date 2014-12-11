@@ -4,17 +4,21 @@ from players import HumanPlayer, CompPlayerEasy, CompPlayerMedium
 WELCOME = "Welcome to Domino!"
 GET_PATH = "'tile' file path: "
 GET_N_PLAYERS = "number of players (1-4): "
-DRAW = "It's a draw!"
-GET_COMP_SKILL = "Computer skill: Easy (e), Medium (m): "
 GET_PLAYER_NAME = "player %s name: "
 GET_IS_HUMAN = "Human player (y/n): "
+GET_COMP_SKILL = "Computer skill: Easy (e), Medium (m): "
+
+TURN_STR = "Turn of %s to play, player %d:"
+HAND_STR = "Hand :: %s"
+LOP_STR = "LOP  :: %s"
+
+DRAW = "It's a draw!"
 PLAYER_WON = "Player %s, %s wins!"
+
+COMP_SKILL_EASY = 'e'
+COMP_SKILL_MEDIUM = 'm'
 YES = 'y'
 NO = 'n'
-
-
-
-
 
 class Game:
 
@@ -48,6 +52,7 @@ class Game:
         res = []
 
         for line in lines:
+            line = line.strip()
             # Handle single line
             new_line = ""
             while line:
@@ -61,7 +66,7 @@ class Game:
                         break
 
                 elif is_docstring:
-                    idx = line[3:].find('"""')
+                    idx = line.find('"""')
                     if idx >= 0:
                         line = line[idx+3:]
                         is_docstring = False
@@ -82,6 +87,7 @@ class Game:
                     break
 
                 else:
+
                     com_start = set([line.find('#'), line.find('//'), line.find('/*'), line.find('/**'), line.find('"""')])
                     com_start.remove(-1)
                     if com_start:
@@ -104,12 +110,8 @@ class Game:
         return tiles
 
     def can_put_tile_at_pos(self, tile, pos):
-        if self.lop.empty():
-            return True
-        elif pos == self.LOP_START:
-            return self.lop.get_start() in (tile.left, tile.right)
-        elif pos == self.LOP_END:
-            return self.lop.get_end() in (tile.left, tile.right)
+        return self.can_put_num_at_pos(tile.left, pos) \
+                or self.can_put_num_at_pos(tile.right, pos)
 
     def can_put_num_at_pos(self, num, pos):
         if self.lop.empty():
@@ -140,9 +142,9 @@ class Game:
     def add_player(self, pid, name, is_human, skill, tiles):
         if is_human:
             self._players[pid] = HumanPlayer(pid, name, tiles, self)
-        elif skill == 'e':
+        elif skill == COMP_SKILL_EASY:
             self._players[pid] = CompPlayerEasy(pid, name, tiles, self)
-        else:
+        elif skill == COMP_SKILL_MEDIUM:
             self._players[pid] = CompPlayerMedium(pid, name, tiles, self)
         self.n_players += 1
 
@@ -169,9 +171,10 @@ class Game:
 
     def step(self, pid, is_first_move):
         p = self.get_player(pid)
-        print "Turn of " + p.name + " to play, player " + str(pid) + ":"
-        print "Hand :: " + p.hand_str()
-        print "LOP  :: " + str(self.lop)
+        print
+        print TURN_STR %(p.name, pid)
+        print HAND_STR %p.hand_str()
+        print LOP_STR %str(self.lop)
         print
         if is_first_move:
             p.first_move()
@@ -221,7 +224,6 @@ class Game:
             self.step(pid, is_first_move)
             is_first_move = False
             if self.player_won(pid):
-                print
                 print PLAYER_WON %(str(pid), self.get_player(pid).name)
                 return
         # If no player won and iteration ended,
@@ -247,5 +249,5 @@ class Game:
             p_tiles.sort(key = lambda t : t[0])
             player_tiles = [Tile(t[1], t[2]) for t in p_tiles]
             self.add_player(pid, player_name, True if is_human == YES else False,
-                            raw_input(GET_COMP_SKILL) if is_human == NO else "", player_tiles)
+                            raw_input(GET_COMP_SKILL).lower() if is_human == NO else "", player_tiles)
         self.ds = DoubleSix([Tile(t[1], t[2]) for t in tiles[(i + 1) * self.HAND_SIZE:]])

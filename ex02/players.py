@@ -82,7 +82,7 @@ class CompPlayerEasy(CompPlayer):
             elif self.game.can_put_num_at_pos(high, self.game.LOP_END):
                 return self.put_tile(tile_number, self.game.LOP_END)
             elif self.game.can_put_num_at_pos(high, self.game.LOP_START):
-                return self.put_tile_at(tile_number, self.game.LOP_START)
+                return self.put_tile(tile_number, self.game.LOP_START)
 
         self.draw_from_deck()
 
@@ -136,10 +136,9 @@ class CompPlayerMedium(CompPlayer):
             move_scores.sort(key=lambda x: x[1]) # keeps original order when tied
 
         best_move_score = move_scores[0][1]
-        
+
         if best_move_score > 2:
             self.draw_from_deck()
             return
 
         self.put_tile(*move_scores[0][0])
-    
