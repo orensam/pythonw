@@ -13,14 +13,15 @@ YES = 'y'
 NO = 'n'
 
 
-HAND_SIZE = 7
-DECK_SIZE = 28
+
 
 
 class Game:
 
     LOP_START = 's'
     LOP_END = 'e'
+    HAND_SIZE = 7
+    DECK_SIZE = 28
 
     def __init__(self):
         self.n_players = 0
@@ -128,7 +129,7 @@ class Game:
         return self.lop.get_stats()
 
     def get_lop_size(self):
-        return self.lop.get_len()
+        return self.lop.get_size()
 
     def get_lop_start(self):
         return self.lop.get_start()
@@ -160,25 +161,27 @@ class Game:
 
     def can_play(self, pid):
         p = self.get_player(pid)
-        for t in p.tiles:
-            if self.can_put_tile_at_start(t) or self.can_put_tile_at_end(t):
+        for tile in p.tiles:
+            if self.can_put_tile_at_pos(tile, self.LOP_START) \
+                    or self.can_put_tile_at_pos(tile, self.LOP_END):
                 return True
         return not self.ds.empty()
 
     def step(self, pid, is_first_move):
         p = self.get_player(pid)
+        print "Turn of " + p.name + " to play, player " + str(pid) + ":"
+        print "Hand :: " + p.hand_str()
+        print "LOP  :: " + str(self.lop)
+        print
         if is_first_move:
             p.first_move()
         else:
-            print "Turn of " + p.name + " to play, player " + str(pid) + ":"
-            print "Hand :: " + p.hand_str()
-            print "LOP  :: " + str(self.lop)
             p.move()
 
     def chose_first_player(self):
         player_tiles = {pid:self.get_player(pid).get_tile_tups() for pid in self.get_pids()}
 
-        for i in range(6,0,-1):
+        for i in range(6,-1,-1):
             for pid, tiles in player_tiles.items():
                 if (i,i) in tiles:
                     return pid
@@ -240,9 +243,9 @@ class Game:
         for i in xrange(int(num_of_players)):
             pid = i + 1
             player_name, is_human = raw_input(GET_PLAYER_NAME %str(pid)), raw_input(GET_IS_HUMAN).lower()
-            p_tiles = tiles[i * HAND_SIZE:(i + 1) * HAND_SIZE]
+            p_tiles = tiles[i * self.HAND_SIZE:(i + 1) * self.HAND_SIZE]
             p_tiles.sort(key = lambda t : t[0])
             player_tiles = [Tile(t[1], t[2]) for t in p_tiles]
             self.add_player(pid, player_name, True if is_human == YES else False,
                             raw_input(GET_COMP_SKILL) if is_human == NO else "", player_tiles)
-        self.ds = DoubleSix([Tile(t[1], t[2]) for t in tiles[(i + 1) * HAND_SIZE:]])
+        self.ds = DoubleSix([Tile(t[1], t[2]) for t in tiles[(i + 1) * self.HAND_SIZE:]])

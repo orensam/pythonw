@@ -55,6 +55,7 @@ class LOP:
             stats[t.left] += 1
             if t.right != t.left:
                 stats[t.right] += 1
+        return stats
 
     def add_at_start(self, tile):
         if tile.right != self.get_start():

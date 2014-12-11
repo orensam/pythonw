@@ -27,7 +27,7 @@ class Player(object):
         self.tiles.pop(tile_number-1)
 
     def first_move(self):
-        self.game.add_tile_at_end(self.tiles[0])
+        self.game.add_tile_at_pos(self.tiles[0], self.game.LOP_START)
         self.tiles.pop(0)
 
 
@@ -43,22 +43,23 @@ class HumanPlayer(Player):
         inp = raw_input(CHOOSE_TILE % len(self.tiles))
         return int(inp.split()[0]), inp.split()[1].lower()
 
-    def get_move(self):
-        tile_number, lop_pos = self.get_input()
-        tile = self.tiles[tile_number-1]
-        while not self.game.can_put_tile_at_pos(tile, lop_pos):
-            print ILLEGAL_MOVE
+    def get_move(self, choice):
+        if choice == self.TILE_CHAR:
             tile_number, lop_pos = self.get_input()
             tile = self.tiles[tile_number-1]
-        return tile_number, lop_pos
+            if not self.game.can_put_tile_at_pos(tile, lop_pos):
+                return False
+            self.put_tile(tile_number, lop_pos)
+            return True
+        elif choice == self.DRAW_CHAR:
+            self.draw_from_deck()
+            return True
 
     def move(self):
         choice = raw_input(CHOOSE_ACTION).lower()
-        if choice == self.TILE_CHAR:
-            tile_number, lop_pos = self.get_move()
-            self.put_tile(tile_number, lop_pos)
-        elif choice == self.DRAW_CHAR:
-            self.draw_from_deck()
+        while not self.get_move(choice):
+            print ILLEGAL_MOVE
+            choice = raw_input(CHOOSE_ACTION).lower()
 
 class CompPlayer(Player):
     def __init__(self, pid, name, tiles, game):
@@ -140,5 +141,5 @@ class CompPlayerMedium(CompPlayer):
             self.draw_from_deck()
             return
 
-        self.put_tile(*move_scores[0])
+        self.put_tile(*move_scores[0][0])
     
