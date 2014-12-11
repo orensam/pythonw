@@ -3,9 +3,10 @@ ILLEGAL_MOVE = "Error: Illegal move"
 CHOOSE_TILE = "Choose tile (1-%d), and place (Start - s, End - e): "
 
 ILLEGAL_MOVE_SCORE = 3
+DRAW_FROM_DECK_SCORE = 2
+
 
 class Player(object):
-
     def __init__(self, pid, name, tiles, game):
         self.id = pid
         self.name = name
@@ -24,7 +25,7 @@ class Player(object):
 
     def put_tile(self, tile_number, lop_pos):
         self.game.add_tile_at_pos(self.tiles[tile_number - 1], lop_pos)
-        self.tiles.pop(tile_number-1)
+        self.tiles.pop(tile_number - 1)
 
     def first_move(self):
         self.game.add_tile_at_pos(self.tiles[0], self.game.LOP_START)
@@ -32,7 +33,6 @@ class Player(object):
 
 
 class HumanPlayer(Player):
-
     TILE_CHAR = 't'
     DRAW_CHAR = 'd'
 
@@ -46,7 +46,7 @@ class HumanPlayer(Player):
     def get_move(self, choice):
         if choice == self.TILE_CHAR:
             tile_number, lop_pos = self.get_input()
-            tile = self.tiles[tile_number-1]
+            tile = self.tiles[tile_number - 1]
             if not self.game.can_put_tile_at_pos(tile, lop_pos):
                 return False
             self.put_tile(tile_number, lop_pos)
@@ -61,12 +61,13 @@ class HumanPlayer(Player):
             print ILLEGAL_MOVE
             choice = raw_input(CHOOSE_ACTION).lower()
 
+
 class CompPlayer(Player):
     def __init__(self, pid, name, tiles, game):
         super(CompPlayer, self).__init__(pid, name, tiles, game)
 
-class CompPlayerEasy(CompPlayer):
 
+class CompPlayerEasy(CompPlayer):
     def __init__(self, pid, name, tiles, game):
         super(CompPlayerEasy, self).__init__(pid, name, tiles, game)
 
@@ -88,19 +89,21 @@ class CompPlayerEasy(CompPlayer):
 
 
 class CompPlayerMedium(CompPlayer):
-
     def __init__(self, pid, name, tiles, game):
         super(CompPlayerMedium, self).__init__(pid, name, tiles, game)
 
-    def calc_move_score(self, tile, lop_num, lop_stats, lop_size, match_high = False):
-        exposed_num, match_num = max([tile.right, tile.left]), min([tile.right, tile.left])
+    def calc_move_score(self, tile, lop_num, lop_stats, lop_size,
+                        match_high=False):
+        exposed_num, match_num = max([tile.right, tile.left]), min(
+            [tile.right, tile.left])
         if match_high:
             exposed_num, match_num = match_num, exposed_num
         if lop_num != match_num:
             return ILLEGAL_MOVE_SCORE
 
         n_tiles_with_exposed_num = 7 - lop_stats[exposed_num] - \
-                                   len([t for t in self.tiles if exposed_num in (t.right, t.left)])
+                                   len([t for t in self.tiles if
+                                        exposed_num in (t.right, t.left)])
 
         n_tiles_remaining = self.game.DECK_SIZE - lop_size - 1
 
@@ -126,18 +129,19 @@ class CompPlayerMedium(CompPlayer):
             move_scores.append(move)
             move = ((tile_number, self.game.LOP_END),
                     self.calc_move_score(tile, lop_end, lop_stats, lop_size,
-                                         match_high= True))
+                                         match_high=True))
             move_scores.append(move)
             move = ((tile_number, self.game.LOP_START),
                     self.calc_move_score(tile, lop_start, lop_stats, lop_size,
-                                         match_high= True))
+                                         match_high=True))
             move_scores.append(move)
 
-            move_scores.sort(key=lambda x: x[1]) # keeps original order when tied
+            move_scores.sort(
+                key=lambda x: x[1])  # keeps original order when tied
 
         best_move_score = move_scores[0][1]
 
-        if best_move_score > 2:
+        if best_move_score > DRAW_FROM_DECK_SCORE:
             self.draw_from_deck()
             return
 

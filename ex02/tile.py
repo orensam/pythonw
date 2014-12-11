@@ -1,5 +1,4 @@
 class Tile:
-
     def __init__(self, right, left):
         self.left = left
         self.right = right
@@ -16,8 +15,8 @@ class Tile:
     def str_lop(self):
         return "[%d:%d]" % (self.left, self.right)
 
-class DoubleSix:
 
+class DoubleSix:
     def __init__(self, tiles):
         self._tiles = tiles[:]
 
@@ -27,8 +26,8 @@ class DoubleSix:
     def draw(self):
         return self._tiles.pop(0)
 
-class LOP:
 
+class LOP:
     def __init__(self):
         self._tiles = []
 
@@ -50,7 +49,7 @@ class LOP:
         return len(self._tiles)
 
     def get_stats(self):
-        stats = {i:0 for i in range(7)}
+        stats = {i: 0 for i in range(7)}
         for t in self._tiles:
             stats[t.left] += 1
             if t.right != t.left:
@@ -66,4 +65,3 @@ class LOP:
         if tile.left != self.get_end():
             tile.flip()
         self._tiles.insert(len(self._tiles), tile)
-        
