@@ -1,4 +1,9 @@
 """
+Python Workshop Project 2: Domino
+Name: Oren Samuel
+Login: orensam
+ID: 200170694
+
 Game module - contains all the main logic of the domino game.
 """
 
@@ -47,10 +52,10 @@ class Game:
         Initialize a new, empty game.
         :return:
         """
-        self.n_players = 0
+        self._n_players = 0
         self._players = {}
-        self.lop = LOP()
-        self.ds = DoubleSix([])
+        self._lop = LOP()
+        self._ds = DoubleSix([])
 
     def line_to_tiles(self, line):
         """
@@ -130,7 +135,7 @@ class Game:
                 res.append(new_line)
                 # end handle single line
 
-        # Turn line to actual tiles
+        # Parse data in the line
         tiles = []
         for line in res:
             tiles += self.line_to_tiles(line)
@@ -150,45 +155,45 @@ class Game:
         Returns True iff it is legal to put the given number
          in position pos of the LOP
         """
-        if self.lop.empty():
+        if self._lop.empty():
             return True
         elif pos == self.LOP_START:
-            return self.lop.get_start() == num
+            return self._lop.get_start() == num
         elif pos == self.LOP_END:
-            return self.lop.get_end() == num
+            return self._lop.get_end() == num
 
     def add_tile_at_pos(self, tile, pos):
         """
         Adds the given tile in position pos of the LOP
         """
         if pos == self.LOP_START:
-            self.lop.add_at_start(tile)
+            self._lop.add_at_start(tile)
         elif pos == self.LOP_END:
-            self.lop.add_at_end(tile)
+            self._lop.add_at_end(tile)
 
     def get_lop_stats(self):
         """
         Returns the LOP statistics
         """
-        return self.lop.get_stats()
+        return self._lop.get_stats()
 
     def get_lop_size(self):
         """
         Returns the LOP size
         """
-        return self.lop.get_size()
+        return self._lop.get_size()
 
     def get_lop_start(self):
         """
         Returns the LOP starting number
         """
-        return self.lop.get_start()
+        return self._lop.get_start()
 
     def get_lop_end(self):
         """
         Returns the LOP ending number
         """
-        return self.lop.get_end()
+        return self._lop.get_end()
 
     def add_player(self, pid, name, is_human, skill, tiles):
         """
@@ -202,13 +207,13 @@ class Game:
             self._players[pid] = CompPlayerEasy(pid, name, tiles, self)
         elif skill == COMP_SKILL_MEDIUM:
             self._players[pid] = CompPlayerMedium(pid, name, tiles, self)
-        self.n_players += 1
+        self._n_players += 1
 
     def draw_from_deck(self):
         """
         Draws a tile from the DoubleSix deck.
         """
-        return self.ds.draw()
+        return self._ds.draw()
 
     def get_pids(self):
         """
@@ -240,7 +245,7 @@ class Game:
             if self.can_put_tile_at_pos(tile, self.LOP_START) \
                     or self.can_put_tile_at_pos(tile, self.LOP_END):
                 return True
-        return not self.ds.empty()
+        return not self._ds.empty()
 
     def step(self, pid, is_first_move):
         """
@@ -252,7 +257,7 @@ class Game:
         print
         print TURN_STR % (p.name, pid)
         print HAND_STR % p.hand_str()
-        print LOP_STR % str(self.lop)
+        print LOP_STR % str(self._lop)
         print
         if is_first_move:
             p.first_move()
@@ -295,12 +300,13 @@ class Game:
     def player_iter(self):
         """
         Iterates the players by pid, and yields each player that can play.
-        Exits when
-        :return:
+        Exits when no player can play.
         """
         first = self.chose_first_player()
         cur_pid = first
         cant_play_count = 0
+
+        # Run until <n> players can't play
         while cant_play_count < len(self._players):
             if cur_pid == first:
                 cant_play_count = 0
@@ -308,9 +314,14 @@ class Game:
                 yield cur_pid
             else:
                 cant_play_count += 1
-            cur_pid = (cur_pid % self.n_players) + 1
+            # next player
+            cur_pid = (cur_pid % self._n_players) + 1
 
     def play(self):
+        """
+        Iters the player's, giving each of them a turn.
+        Ends when a player wins or when there's a draw.
+        """
         is_first_move = True
         for pid in self.player_iter():
             self.step(pid, is_first_move)
@@ -323,26 +334,29 @@ class Game:
         print DRAW
 
     def setup(self):
+        """
+        Performs the initial setup of the game -
+        Parses the tile file and gets player info
+        """
         print WELCOME
         file_path = raw_input(GET_PATH)
-
-        # In this case, file_parser() should return iterable data structure
-        # (later we will access tiles[i])
         tiles = self.parse_file(file_path)
-
         num_of_players = raw_input(GET_N_PLAYERS)
 
         for i in xrange(int(num_of_players)):
             pid = i + 1
-            player_name, is_human = raw_input(
-                GET_PLAYER_NAME % str(pid)), raw_input(GET_IS_HUMAN).lower()
+            # Player name and type
+            player_name, is_human = raw_input(GET_PLAYER_NAME % str(pid)), \
+                                    raw_input(GET_IS_HUMAN).lower()
+            # Get player's tiles, sort by position
             p_tiles = tiles[i * self.HAND_SIZE:(i + 1) * self.HAND_SIZE]
             p_tiles.sort(key=lambda t: t[0])
             player_tiles = [Tile(t[1], t[2]) for t in p_tiles]
+            # Add the player to the game
             self.add_player(pid, player_name,
                             True if is_human == YES else False,
                             raw_input(GET_COMP_SKILL).lower()
                             if is_human == NO else "",
                             player_tiles)
-        self.ds = DoubleSix(
-            [Tile(t[1], t[2]) for t in tiles[(i + 1) * self.HAND_SIZE:]])
+        self._ds = DoubleSix([Tile(t[1], t[2])
+                              for t in tiles[(i + 1) * self.HAND_SIZE:]])
