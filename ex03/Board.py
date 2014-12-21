@@ -101,6 +101,9 @@ class PlayerBoard(Board):
                 self.set_misses_around_ship(ship)
                 return ship.positions
 
+    def lost(self):
+        return len(self.ships) == 0
+
 class EnemyBoard(Board):
 
     def sunk_ship(self, ship_positions):

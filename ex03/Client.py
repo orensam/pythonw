@@ -4,6 +4,7 @@ import socket
 import select
 import sys
 import Protocol
+from Board import PlayerBoard, EnemyBoard, Ship
 
 EXIT_ERROR = 1
 BOARD_SIZE = 10
@@ -21,6 +22,9 @@ class Client:
         self.socket_to_server = None
 
         self.all_sockets = []
+
+        self.board = PlayerBoard(BOARD_SIZE)
+        self.enemy_board = EnemyBoard(BOARD_SIZE)
         
         
         """
