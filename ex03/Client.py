@@ -9,6 +9,8 @@ from Board import PlayerBoard, EnemyBoard, Ship
 EXIT_ERROR = 1
 BOARD_SIZE = 10
 
+SHOOT_PREFIX = "SHOOT|"
+
 class Client:
 
     def __init__(self, s_name, s_port, player_name, player_ships):
@@ -57,8 +59,6 @@ class Client:
             self.socket_to_server = None
             print msg
             exit(EXIT_ERROR)
-            
-       
 
         # we wait to get ok from server to know we can send our name
         num, msg = Protocol.recv_all(self.socket_to_server)
@@ -70,7 +70,6 @@ class Client:
             print "Server has closed connection."
             self.close_client()
 
-
         # send our name to server
         eNum, eMsg = Protocol.send_all(self.socket_to_server, sys.argv[3])
         if eNum:
@@ -79,7 +78,6 @@ class Client:
 
         # TODO - maybe the client should send more information to the server?
         # it is up to you. 
-        
 
         print "*** Connected to server on %s ***" % server_address[0] 
         print
@@ -106,15 +104,10 @@ class Client:
             self.close_client()
                 
         else:
-            pass    # todo - you should decide what to do with msg, but obviously 
-                    # the server should know about it 
-            
-
-
-
+            # Send letter and number
+            self.send_shoot(msg)
 
     def __handle_server_request(self):
-        
         
         num, msg = Protocol.recv_all(self.socket_to_server)
         if num == Protocol.NetworkErrorCodes.FAILURE:
@@ -128,11 +121,21 @@ class Client:
             
         if "start" in msg: self.__start_game(msg)
         
-        
-        # TODO - continue (or change, it's up to you) implementation of this method.
-        pass
+        # Other player's turn - recieve shot, return shot result
+        if msg.startswith(SHOOT_PREFIX):
+            pass
+
+        elif msg.startswith(HIT_PREFIX):
+            pass
+
+        elif msg.startswith(MISS_PREFIX):
+            pass
+
     
-    
+
+    def send_shoot(self, msg):
+        Protocol.send_all(self.socket_to_server, SHOOT_PREFIX + msg)
+
     def __start_game(self, msg):
         
         print "Welcome " + self.player_name + "!"
