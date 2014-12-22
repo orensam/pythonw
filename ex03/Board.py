@@ -59,10 +59,10 @@ class Board(object):
         self.places[row][col] = char
 
     def add_ship(self, positions):
-        ship = Ship(positions)
+        ship = Ship(positions, self.size)
         self.ships.append(ship)
         for row, col in positions:
-            self[row][col] = Board.SHIP
+            self[row, col] = Board.SHIP
 
     def add_hit(self, row, col):
         self[row, col] = Board.HIT

@@ -6,9 +6,12 @@ import sys
 
 
 import Protocol
+import Client
 
 MAX_CONNECTIONS = 2  # DO NOT CHANGE
 ERROR_EXIT = 1
+
+
 
 
 class Server:
@@ -23,6 +26,7 @@ class Server:
 
  
         self.all_sockets = []
+        self.turn = 0
         
         """
         DO NOT CHANGE
@@ -143,9 +147,17 @@ class Server:
         # Tip: its best if you keep a 'turn' variable, so you'd be able to
         # know who's turn is it, and from which client you should expect a move
         
-        pass
-                
-
+        pcon = self.players_sockets[self.turn]
+        num, msg = Protocol.recv_all(pcon)
+        
+        if msg.startswith(Client.ILOST_PREFIX):
+            Protocol.send_all(self.players_sockets[1 - self.turn], Client.YOUWON_PREFIX)
+            self.shut_down_server()
+        
+        else:
+            Protocol.send_all(self.players_sockets[1 - self.turn], msg)
+        
+        self.turn = 1 - self.turn                
          
 
     def run_server(self):
