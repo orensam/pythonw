@@ -37,13 +37,6 @@ class Client:
         self.sent_row = 0
         self.sent_col = 0
         
-        
-        """
-        DO NOT CHANGE
-        If you want to run you program on windowns, you'll
-        have to temporarily remove this line (but then you'll need
-        to manually give input to your program). 
-        """
         self.all_sockets.append(sys.stdin)  # DO NOT CHANGE
     
     def parse_ships(self, fn):
@@ -94,26 +87,15 @@ class Client:
             exit(EXIT_ERROR)
 
         # we wait to get ok from server to know we can send our name
-        num, msg = Protocol.recv_all(self.socket_to_server)
-        if num == Protocol.NetworkErrorCodes.FAILURE:
-            print msg
-            self.close_client()
-
-        if num == Protocol.NetworkErrorCodes.DISCONNECTED:
-            print "Server has closed connection."
-            self.close_client()
-
+        self.rcv_from_server()
+        
         # send our name to server
         self.send_to_server(self.player_name)
-
-        # TODO - maybe the client should send more information to the server?
-        # it is up to you. 
 
         print "*** Connected to server on %s ***" % server_address[0] 
         print
         print "Waiting for an opponent..."
         print
-
 
     def close_client(self, err_msg = None):
         
@@ -126,7 +108,6 @@ class Client:
         
         print "*** Goodbye... ***"
         exit(code)
-
 
     def __handle_standard_input(self):
         
@@ -142,14 +123,7 @@ class Client:
 
     def __handle_server_request(self):
         
-        num, msg = Protocol.recv_all(self.socket_to_server)
-        if num == Protocol.NetworkErrorCodes.FAILURE:
-            print msg
-            self.close_client()
-
-        if num == Protocol.NetworkErrorCodes.DISCONNECTED:
-            print "Server has closed connection."
-            self.close_client()
+        msg = self.rcv_from_server()        
                         
         if msg.startswith('start'):
             self.__start_game(msg)
@@ -165,7 +139,6 @@ class Client:
             is_hit = self.board.enemy_shot(row, col)
             
             if is_hit:
-                import pdb; pdb.set_trace()
                 sunk_ship_perimeter = self.board.pop_sunk_ship()
                 if sunk_ship_perimeter:
                     self.send_sink(sunk_ship_perimeter)
@@ -205,6 +178,19 @@ class Client:
         elif msg.startswith(YOUWON_PREFIX):
             print "You won!"
     
+    def rcv_from_server(self):
+        
+        err_num, msg = Protocol.recv_all(self.socket_to_server)
+        
+        if err_num == Protocol.NetworkErrorCodes.FAILURE:
+            self.close_client()
+
+        elif err_num == Protocol.NetworkErrorCodes.DISCONNECTED:
+            self.close_client("Server has closed connection.")
+        
+        else:
+            return msg
+        
     def send_to_server(self, msg):
         
         err_num, err_msg = Protocol.send_all(self.socket_to_server, msg)

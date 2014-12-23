@@ -18,7 +18,6 @@ class NetworkErrorCodes():
         pass
 
 
-
 def send_all(s, msg):
     """
     This method is user in order to send the message 'msg' into the remote-end
@@ -30,7 +29,6 @@ def send_all(s, msg):
     In both case NetworkErrorCodes.FAILURE is returned to the called, where a string
     containing the message info is also returned to the sender.
     """
-
     s.settimeout(TIME_OUT_TIME)
     try:
         s.sendall(msg + END_MSG)
@@ -42,8 +40,6 @@ def send_all(s, msg):
         return [NetworkErrorCodes.FAILURE, 'ERROR: TIMED-OUT.']
 
     return [NetworkErrorCodes.SUCCESS, None]
-
-
 
 def recv_all(s):
     """
@@ -59,9 +55,7 @@ def recv_all(s):
     
     In case the remove end has closed its connection, NetworkErrorCodes.DISCONNECTED is 
     returned.
-    
     """
-
     s.settimeout(TIME_OUT_TIME)
     all_data = ''
 

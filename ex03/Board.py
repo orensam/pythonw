@@ -1,6 +1,7 @@
 __author__ = 'orensam'
 
 class ShotResult(object):
+    
     HIT = 'H'
     MISS = 'X'
     SUNK = 'S'
@@ -31,8 +32,9 @@ class Ship(object):
     def set_perimeter(self):
         for row, col in self.positions:
             for arow, acol in Ship.area_cells(row, col):
-                if (arow, acol) not in self.positions and \
-                    0 <= arow < self.board_size and 0 <= acol < self.board_size:
+                if (arow, acol) not in self.positions \
+                    and 0 <= arow < self.board_size \
+                    and 0 <= acol < self.board_size:
                     self.perimeter.add((arow, acol))
 
     def get_perimeter(self):
@@ -74,6 +76,7 @@ class Board(object):
         for row, col in ship.get_perimeter():
             self.add_miss(row, col)
 
+
 class PlayerBoard(Board):
 
     def __init__(self, size):
@@ -109,7 +112,3 @@ class EnemyBoard(Board):
     def sunk_ship(self, ship_positions):
         dummy_ship = Ship(ship_positions)
         self.set_misses_around_ship(dummy_ship)
-
-
-
-

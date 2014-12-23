@@ -4,14 +4,11 @@ import socket
 import select
 import sys
 
-
 import Protocol
 import Client
 
 MAX_CONNECTIONS = 2  # DO NOT CHANGE
 ERROR_EXIT = 1
-
-
 
 
 class Server:
@@ -36,8 +33,6 @@ class Server:
         """
         self.all_sockets.append(sys.stdin)
         
-
-
     def connect_server(self):
 
         # Create a TCP/IP socket_to_server
@@ -45,11 +40,9 @@ class Server:
             self.l_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.l_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # DP NOT CHANGE
         except socket.error as msg:
-
             self.l_socket = None
             print msg
             exit(ERROR_EXIT)
-
 
         server_address = (self.server_name, int(self.server_port))
         try:
@@ -64,7 +57,6 @@ class Server:
 
         print "*** Server is up on %s ***" % server_address[0]
         print
-
 
     def shut_down_server(self):        
         for sock in self.players_sockets:
@@ -86,29 +78,18 @@ class Server:
             print eMsg
             self.shut_down_server()
         
-        ################################################
-        
-        
         # Receive new client's name
         num, msg = Protocol.recv_all(connection)
         if num == Protocol.NetworkErrorCodes.FAILURE:
             print msg
             self.shut_down_server()
 
-        if num == Protocol.NetworkErrorCodes.DISCONNECTED:
-            
+        if num == Protocol.NetworkErrorCodes.DISCONNECTED:            
             print msg
             self.shut_down_server()
         
         self.players_names.append(msg)
-        ####################################################
-        
-        ########################
-        # TODO - maybe the new server should expect something
-        # else from the client?
-        ########################
-        
-      
+
         self.players_sockets.append(connection)
         self.all_sockets.append(connection)
         print "New client named '%s' has connected at address %s." % (msg,client_address[0])
@@ -116,8 +97,6 @@ class Server:
         if len(self.players_sockets) == 2:  # we can start the game
             self.__set_start_game(0) 
             self.__set_start_game(1)
-
-
 
     def __set_start_game(self, player_num):
 
@@ -128,19 +107,7 @@ class Server:
             print eMsg
             self.shut_down_server()
                                 
-
-
     def __handle_existing_connections(self):
-        
-        # TODO - this is where you come in. You should get the message
-        # from existing connection (this will be sent through Client.py meaning
-        # that this client has just wrote something (using the Keyboard). Get 
-        # this message, parse it, and response accordingly. 
-        
-        
-        # Tip: its best if you keep a 'turn' variable, so you'd be able to
-        # know who's turn is it, and from which client you should expect a move
-        
                 
         pcon = self.players_sockets[self.turn]
         num, msg = Protocol.recv_all(pcon)
@@ -156,7 +123,6 @@ class Server:
             Protocol.send_all(self.players_sockets[1 - self.turn], msg)
         
         self.turn = 1 - self.turn                
-         
 
     def run_server(self):
         
@@ -175,7 +141,6 @@ class Server:
 
 
 def main():
-
     server = Server(sys.argv[1], int(sys.argv[2]))   
     server.connect_server()
     server.run_server()
