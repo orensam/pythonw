@@ -177,6 +177,7 @@ class Client:
         
         elif msg.startswith(YOUWON_PREFIX):
             print "You won!"
+            self.close_client()
     
     def rcv_from_server(self):
         

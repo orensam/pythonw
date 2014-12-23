@@ -109,21 +109,29 @@ class Server:
                                 
     def __handle_existing_connections(self):
                 
-        pcon = self.players_sockets[self.turn]
-        num, msg = Protocol.recv_all(pcon)
+        cur_con = self.players_sockets[self.turn]
+        other_con = self.players_sockets[1 - self.turn]
+        
+        num, msg = Protocol.recv_all(cur_con)
         
         if num:
             self.shut_down_server()
         
         if msg.startswith(Client.ILOST_PREFIX):
-            Protocol.send_all(self.players_sockets[1 - self.turn], Client.YOUWON_PREFIX)
+            Protocol.send_all(other_con, Client.YOUWON_PREFIX)
             self.shut_down_server()
         
         else:
             Protocol.send_all(self.players_sockets[1 - self.turn], msg)
         
         self.turn = 1 - self.turn                
-
+    
+    def send_to_con(self, con, msg):
+        num, msg = Protocol.send_all(con, msg)
+        if num:
+            print msg
+            self.shut_down_server()        
+        
     def run_server(self):
         
         while True:
