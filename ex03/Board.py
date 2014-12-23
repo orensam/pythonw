@@ -10,7 +10,7 @@ class Ship(object):
     def __init__(self, positions, board_size):
         self.positions = {pos:True for pos in positions}
         self.board_size = board_size
-        self.perimeter = []
+        self.perimeter = set()
         self.set_perimeter()
 
     def has_pos(self, row, col):
@@ -32,8 +32,8 @@ class Ship(object):
         for row, col in self.positions:
             for arow, acol in Ship.area_cells(row, col):
                 if (arow, acol) not in self.positions and \
-                    arow < self.board_size and acol < self.board_size:
-                    self.perimeter.append((arow, acol))
+                    0 <= arow < self.board_size and 0 <= acol < self.board_size:
+                    self.perimeter.add((arow, acol))
 
     def get_perimeter(self):
         return self.perimeter
@@ -99,7 +99,7 @@ class PlayerBoard(Board):
             if ship.is_sunk():
                 self.ships.remove(ship)
                 self.set_misses_around_ship(ship)
-                return ship.positions
+                return list(ship.get_perimeter())
 
     def lost(self):
         return len(self.ships) == 0

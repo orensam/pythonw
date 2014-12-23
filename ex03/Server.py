@@ -66,21 +66,15 @@ class Server:
         print
 
 
-    def shut_down_server(self):
-        
-        # TODO - implement this method - the server should
-        # close all sockets (of players and l_socket)
-        pass
-        
-        
+    def shut_down_server(self):        
+        for sock in self.players_sockets:
+            sock.shutdown(socket.SHUT_RDWR)
+            sock.close()
 
-    def __handle_standard_input(self):
-        
-        msg = sys.stdin.readline().strip().upper()
-        
+    def __handle_standard_input(self):        
+        msg = sys.stdin.readline().strip().upper()        
         if msg == 'EXIT':
             self.shut_down_server()
-
 
     def __handle_new_connection(self):
         
@@ -147,8 +141,12 @@ class Server:
         # Tip: its best if you keep a 'turn' variable, so you'd be able to
         # know who's turn is it, and from which client you should expect a move
         
+                
         pcon = self.players_sockets[self.turn]
         num, msg = Protocol.recv_all(pcon)
+        
+        if num:
+            self.shut_down_server()
         
         if msg.startswith(Client.ILOST_PREFIX):
             Protocol.send_all(self.players_sockets[1 - self.turn], Client.YOUWON_PREFIX)
@@ -161,10 +159,8 @@ class Server:
          
 
     def run_server(self):
-
         
         while True:
-
             r_sockets = select.select(self.all_sockets, [], [])[0]  # We won't use writable and exceptional sockets
 
             if sys.stdin in r_sockets:
@@ -172,14 +168,10 @@ class Server:
 
             elif self.l_socket in r_sockets:
                 self.__handle_new_connection()
-                           
 
             elif self.players_sockets[0] in r_sockets or \
                  self.players_sockets[1] in r_sockets:
-                
                     self.__handle_existing_connections() # TODO- implement this method
-                
-
 
 
 def main():

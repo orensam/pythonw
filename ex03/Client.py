@@ -61,7 +61,7 @@ class Client:
     
     @staticmethod
     def nums_to_coord(row, col):
-        return '%s %d' %(chr(row + 65), )
+        return '%s %d' %(chr(row + 65), col + 1)
     
     @staticmethod
     def nums_list_to_coords(positions, sep = '|'):
@@ -104,10 +104,7 @@ class Client:
             self.close_client()
 
         # send our name to server
-        eNum, eMsg = Protocol.send_all(self.socket_to_server, sys.argv[3])
-        if eNum:
-            print eMsg
-            self.close_client()
+        self.send_to_server(self.player_name)
 
         # TODO - maybe the client should send more information to the server?
         # it is up to you. 
@@ -118,12 +115,17 @@ class Client:
         print
 
 
-    def close_client(self):
+    def close_client(self, err_msg = None):
         
         # TODO - implement 
         
-        print
+        code = EXIT_ERROR
+        if err_msg:
+            print err_msg
+            code = 0
+        
         print "*** Goodbye... ***"
+        exit(code)
 
 
     def __handle_standard_input(self):
@@ -148,13 +150,9 @@ class Client:
         if num == Protocol.NetworkErrorCodes.DISCONNECTED:
             print "Server has closed connection."
             self.close_client()
-            
-            
+                        
         if msg.startswith('start'):
             self.__start_game(msg)
-        
-        #elif msg.startswith('game|turn'):
-        #    print "It's your turn..."
         
         # Other player's turn - recieve shot, return shot result
         elif msg.startswith(SHOOT_PREFIX):
@@ -164,8 +162,10 @@ class Client:
             
             row, col = Client.coord_to_nums(coord)
             
-            if self.board.is_ship(row, col):
-                self.board.add_hit(row, col)
+            is_hit = self.board.enemy_shot(row, col)
+            
+            if is_hit:
+                import pdb; pdb.set_trace()
                 sunk_ship_perimeter = self.board.pop_sunk_ship()
                 if sunk_ship_perimeter:
                     self.send_sink(sunk_ship_perimeter)
@@ -175,7 +175,6 @@ class Client:
                         return
                 else:                    
                     self.send_hit()
-                    
             else:
                 self.board.add_miss(row, col)
                 self.send_miss()
@@ -202,11 +201,22 @@ class Client:
             for row, col in Client.coords_to_nums_list(coords):
                 self.enemy_board.add_miss(row, col)
             self.print_board()
-
+        
+        elif msg.startswith(YOUWON_PREFIX):
+            print "You won!"
     
     def send_to_server(self, msg):
-        Protocol.send_all(self.socket_to_server, msg)
         
+        err_num, err_msg = Protocol.send_all(self.socket_to_server, msg)
+        
+        if err_num == Protocol.NetworkErrorCodes.FAILURE:
+            print err_msg
+            self.close_client()
+        
+        if err_num == Protocol.NetworkErrorCodes.DISCONNECTED:
+            print "Server has closed connection."
+            self.close_client()
+            
     def send_hit(self):
         self.send_to_server(HIT_PREFIX)
     
@@ -224,23 +234,19 @@ class Client:
         self.send_to_server(ILOST_PREFIX)
         
     def __start_game(self, msg):
-        
         print "Welcome " + self.player_name + "!"
-        
         self.opponent_name = msg.split('|')[2]
         print "You're playing against: " + self.opponent_name + ".\n"
-        
         self.print_board()
-        if "not_turn" in msg: return
-        
+        if "not_turn" in msg:
+            return
         print "It's your turn..."
             
     letters = list(map(chr, range(65, 65 + BOARD_SIZE)))
         
     def print_board(self):
         """
-        TODO: use this method for the prints of the board. You should figure
-        out how to modify it in order to properly display the right boards.
+        Prints the boards of the player and the oponent.
         """
         print
         print "%s %59s" % ("My Board:", self.opponent_name + "'s Board:"),
@@ -266,39 +272,23 @@ class Client:
             print "%-3s" % Client.letters[i],
             for j in range(BOARD_SIZE):
                 print "%-3s" % self.enemy_board[i,j],
-
             print
         
         print
-         
-
-
-
 
     def run_client(self):
-
         while True:
-
             r_sockets = select.select(self.all_sockets, [], [])[0]  # We won't use writable and exceptional sockets
-
             if sys.stdin in r_sockets:
                 self.__handle_standard_input()
-
             elif self.socket_to_server in r_sockets:
                 self.__handle_server_request()
 
 
-
-
-
-
 def main():
-  
-    
     client = Client(sys.argv[1], int(sys.argv[2]), sys.argv[3], sys.argv[4])
     client.connect_to_server()
     client.run_client()
-
 
 if __name__ == "__main__":
     main()
