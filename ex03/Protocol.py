@@ -34,10 +34,10 @@ def send_all(s, msg):
         s.sendall(msg + END_MSG)
     
     except socket.error as e:
-        return [NetworkErrorCodes.FAILURE, 'ERROR - Could not send message: %s.' % e[0]]
+        return [NetworkErrorCodes.FAILURE, 'ERROR - Could not send message: %s.\n' % e[0]]
 
     except socket.timeout:
-        return [NetworkErrorCodes.FAILURE, 'ERROR: TIMED-OUT.']
+        return [NetworkErrorCodes.FAILURE, 'ERROR: TIMED-OUT.\n']
 
     return [NetworkErrorCodes.SUCCESS, None]
 
@@ -65,10 +65,10 @@ def recv_all(s):
             data = s.recv(4096)  # DO NOT CHANGE
 
         except socket.error as e:
-            return [NetworkErrorCodes.FAILURE, 'ERROR - Could not recieve a message: %s.' % e[0]]
+            return [NetworkErrorCodes.FAILURE, 'ERROR - Could not recieve a message: %s.\n' % e[0]]
 
         except socket.timeout:
-            return [NetworkErrorCodes.FAILURE, 'ERROR: TIMED-OUT.']
+            return [NetworkErrorCodes.FAILURE, 'ERROR: TIMED-OUT.\n']
 
         all_data += data
         if len(all_data) == 0:
@@ -76,3 +76,4 @@ def recv_all(s):
 
         if all_data.endswith(END_MSG):  
             return [NetworkErrorCodes.SUCCESS, all_data[:-len(END_MSG)]]
+        

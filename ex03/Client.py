@@ -72,7 +72,7 @@ class Client:
         except socket.error as msg:
 
             self.socket_to_server = None
-            print msg
+            sys.stderr.write(repr(msg) + '\n')
             exit(EXIT_ERROR)
 
         server_address = (self.server_name, int(self.server_port))
@@ -83,7 +83,7 @@ class Client:
         except socket.error as msg:
             self.socket_to_server.close()
             self.socket_to_server = None
-            print msg
+            sys.stderr.write(repr(msg) + '\n')
             exit(EXIT_ERROR)
 
         # we wait to get ok from server to know we can send our name
