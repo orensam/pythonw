@@ -97,17 +97,17 @@ class Client:
         print "Waiting for an opponent..."
         print
 
-    def close_client(self, err_msg = None):
+    def close_client(self):
         
         # TODO - implement 
-        
-        code = EXIT_ERROR
-        if err_msg:
-            print err_msg
-            code = 0
+#         
+#         code = EXIT_ERROR
+#         if err_msg:
+#             print err_msg
+#             code = 0
         
         print "*** Goodbye... ***"
-        exit(code)
+        exit(EXIT_ERROR)
 
     def __handle_standard_input(self):
         
@@ -184,10 +184,12 @@ class Client:
         err_num, msg = Protocol.recv_all(self.socket_to_server)
         
         if err_num == Protocol.NetworkErrorCodes.FAILURE:
+            sys.stderr.write(msg)
             self.close_client()
 
         elif err_num == Protocol.NetworkErrorCodes.DISCONNECTED:
-            self.close_client("Server has closed connection.")
+            print "Server has closed connection."
+            self.close_client()
         
         else:
             return msg
@@ -196,13 +198,17 @@ class Client:
         
         err_num, err_msg = Protocol.send_all(self.socket_to_server, msg)
         
-        if err_num == Protocol.NetworkErrorCodes.FAILURE:
-            print err_msg
+        if err_num:
+            sys.stderr.write(err_msg)
             self.close_client()
-        
-        if err_num == Protocol.NetworkErrorCodes.DISCONNECTED:
-            print "Server has closed connection."
-            self.close_client()
+            
+#         if err_num == Protocol.NetworkErrorCodes.FAILURE:
+#             print err_msg
+#             self.close_client()
+#         
+#         if err_num == Protocol.NetworkErrorCodes.DISCONNECTED:
+#             print "Server has closed connection."
+#             self.close_client()
             
     def send_hit(self):
         self.send_to_server(HIT_PREFIX)
@@ -236,7 +242,7 @@ class Client:
         Prints the boards of the player and the oponent.
         """
         print
-        print "%s %59s" % ("My Board:", self.opponent_name + "'s Board:"),
+        print "%s %56s" % ("My Board:", self.opponent_name + "'s Board:"),
 
         print
         print "%-3s" % "",

@@ -1,6 +1,6 @@
 __author__ = 'Alon Ben-Shimol'
 
-
+import time
 import socket
 
 END_MSG = "$$"
@@ -30,6 +30,7 @@ def send_all(s, msg):
     containing the message info is also returned to the sender.
     """
     s.settimeout(TIME_OUT_TIME)
+    time.sleep(0.1)
     try:
         s.sendall(msg + END_MSG)
     
@@ -57,6 +58,7 @@ def recv_all(s):
     returned.
     """
     s.settimeout(TIME_OUT_TIME)
+    time.sleep(0.1)
     all_data = ''
 
     while True:

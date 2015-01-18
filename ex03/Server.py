@@ -41,7 +41,7 @@ class Server:
             self.l_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)  # DP NOT CHANGE
         except socket.error as msg:
             self.l_socket = None
-            print msg
+            sys.stderr.write(repr(msg) + '\n')
             exit(ERROR_EXIT)
 
         server_address = (self.server_name, int(self.server_port))
@@ -52,7 +52,7 @@ class Server:
         except socket.error as msg:
             self.l_socket.close()
             self.l_socket = None
-            print msg
+            sys.stderr.write(repr(msg) + '\n')
             exit(ERROR_EXIT)
 
         print "*** Server is up on %s ***" % server_address[0]
@@ -75,17 +75,17 @@ class Server:
         # Request from new client to send his name
         eNum, eMsg = Protocol.send_all(connection, "ok_name")
         if eNum:
-            print eMsg
+            sys.stderr.write(eMsg)
             self.shut_down_server()
         
         # Receive new client's name
         num, msg = Protocol.recv_all(connection)
         if num == Protocol.NetworkErrorCodes.FAILURE:
-            print msg
+            sys.stderr.write(msg)
             self.shut_down_server()
 
         if num == Protocol.NetworkErrorCodes.DISCONNECTED:            
-            print msg
+            sys.stderr.write(msg)
             self.shut_down_server()
         
         self.players_names.append(msg)
@@ -104,7 +104,7 @@ class Server:
         
         eNum, eMsg = Protocol.send_all(self.players_sockets[player_num], welcome_msg)
         if eNum:
-            print eMsg
+            sys.stderr.write(eMsg)
             self.shut_down_server()
                                 
     def __handle_existing_connections(self):
