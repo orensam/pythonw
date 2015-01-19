@@ -1,3 +1,12 @@
+"""
+Python Workshop Project 3: Battleship
+Name: Oren Samuel
+Login: orensam
+ID: 200170694
+
+Board module
+"""
+
 __author__ = 'orensam'
 
 
