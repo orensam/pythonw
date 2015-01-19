@@ -142,8 +142,8 @@ class Server:
         else:
             Protocol.send_all(self.players_sockets[1 - self.turn], msg)
         
-        if msg.startswith(Client.SHOOT_PREFIX):
-            self.turn = 1 - self.turn
+#         if msg.startswith(Client.SHOOT_PREFIX):
+#             self.turn = 1 - self.turn
         
     def run_server(self):
         
@@ -156,9 +156,17 @@ class Server:
             elif self.l_socket in r_sockets:
                 self.__handle_new_connection()
             
-            elif self.players_sockets[0] in r_sockets or \
-                 self.players_sockets[1] in r_sockets:
-                    self.__handle_existing_connections()
+#             elif self.players_sockets[0] in r_sockets or \
+#                  self.players_sockets[1] in r_sockets:
+#                     self.__handle_existing_connections()
+            
+            elif self.players_sockets[0] in r_sockets:
+                self.turn = 0
+                self.__handle_existing_connections()
+            
+            elif self.players_sockets[1] in r_sockets:
+                self.turn = 1
+                self.__handle_existing_connections()
 
 
 def main():
