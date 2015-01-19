@@ -1,3 +1,12 @@
+"""
+Python Workshop Project 3: Battleship
+Name: Oren Samuel
+Login: orensam
+ID: 200170694
+
+Protocol module
+"""
+
 __author__ = 'Alon Ben-Shimol'
 
 import time
