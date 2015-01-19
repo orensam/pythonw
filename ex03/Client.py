@@ -19,6 +19,7 @@ OP_DISC_PREFIX = "OPDISC|"
 CLOSE_PREFIX = "CLOSE|"
 QUIT_PREFIX = "QUIT|"
 
+
 class Client:
 
     def __init__(self, s_name, s_port, player_name, ships_file_name):
@@ -48,7 +49,7 @@ class Client:
                 self.board.add_ship(Client.coords_to_nums_list(line, ','))
 
     @staticmethod
-    def coord_to_nums(s, with_space = False):
+    def coord_to_nums(s, with_space=False):
         if with_space:
             slist = s.split()
         else:
@@ -57,21 +58,23 @@ class Client:
 
     @staticmethod
     def nums_to_coord(row, col):
-        return '%s %d' %(chr(row + 65), col + 1)
+        return '%s %d' % (chr(row + 65), col + 1)
 
     @staticmethod
-    def nums_list_to_coords(positions, sep = '|'):
-        return sep.join([Client.nums_to_coord(row, col) for row, col in positions])
+    def nums_list_to_coords(positions, sep='|'):
+        return sep.join([Client.nums_to_coord(row, col)
+                         for row, col in positions])
 
     @staticmethod
-    def coords_to_nums_list(coords, sep = '|'):
+    def coords_to_nums_list(coords, sep='|'):
         return [Client.coord_to_nums(s) for s in coords.split(sep)]
 
     def connect_to_server(self):
 
         # Create a TCP/IP socket_to_server
         try:
-            self.socket_to_server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.socket_to_server = socket.socket(socket.AF_INET,
+                                                  socket.SOCK_STREAM)
         except socket.error as msg:
 
             self.socket_to_server = None
@@ -81,7 +84,8 @@ class Client:
         server_address = (self.server_name, int(self.server_port))
         try:
             self.socket_to_server.connect(server_address)
-            self.all_sockets.append(self.socket_to_server)  # this will allow us to use Select System-call
+            # this will allow us to use Select System-call
+            self.all_sockets.append(self.socket_to_server)
 
         except socket.error as msg:
             self.socket_to_server.close()
@@ -95,14 +99,14 @@ class Client:
         # send our name to server
         self.send_to_server(self.player_name)
 
-        print "*** Connected to server on %s ***" % server_address[0] 
+        print "*** Connected to server on %s ***" % server_address[0]
         print
         print "Waiting for an opponent..."
         print
 
     def close_client(self, code):
         self.socket_to_server.shutdown(socket.SHUT_RDWR)
-        self.socket_to_server.close()        
+        self.socket_to_server.close()
         print
         print "*** Goodbye... ***"
         exit(code)
@@ -117,12 +121,12 @@ class Client:
 
         else:
             # Send letter and number
-            self.send_shoot(msg)            
-            self.sent_row, self.sent_col = Client.coord_to_nums(msg)            
+            self.send_shoot(msg)
+            self.sent_row, self.sent_col = Client.coord_to_nums(msg)
 
     def __handle_server_request(self):
 
-        msg = self.rcv_from_server()        
+        msg = self.rcv_from_server()
 
         if msg.startswith('start'):
             self.__start_game(msg)
@@ -131,7 +135,7 @@ class Client:
         elif msg.startswith(SHOOT_PREFIX):
 
             coord = msg[len(SHOOT_PREFIX):]
-            print "%s plays: %s" %(self.opponent_name, coord)
+            print "%s plays: %s" % (self.opponent_name, coord)
 
             row, col = Client.coord_to_nums(coord)
 
@@ -140,13 +144,13 @@ class Client:
             if is_hit:
                 sunk_ship_perimeter = self.board.pop_sunk_ship()
                 if sunk_ship_perimeter:
-                    is_lost = self.board.lost()                    
+                    is_lost = self.board.lost()
                     self.send_sink(sunk_ship_perimeter, is_lost)
                     if is_lost:
-                        self.print_board()                        
-                        print "You lost :("                        
+                        self.print_board()
+                        print "You lost :("
                         self.close_client(EXIT_OK)
-                else:                    
+                else:
                     self.send_hit()
             else:
                 self.board.add_miss(row, col)
@@ -155,7 +159,7 @@ class Client:
             self.print_board()
             print "It's your turn..."
 
-        elif msg.startswith(HIT_PREFIX):     
+        elif msg.startswith(HIT_PREFIX):
             # Enemy confirmed hit, put it on my representation of his board
             self.enemy_board.add_hit(self.sent_row, self.sent_col)
             self.print_board()
@@ -184,9 +188,9 @@ class Client:
             print "You won!"
             self.close_client(EXIT_OK)
 
-        elif msg.startswith(OP_DISC_PREFIX):            
+        elif msg.startswith(OP_DISC_PREFIX):
             print "Your opponent has disconnected. You win!"
-            self.close_client(EXIT_OK)                
+            self.close_client(EXIT_OK)
 
     def rcv_from_server(self):
 
@@ -267,19 +271,20 @@ class Client:
         for i in range(BOARD_SIZE):
             print "%-3s" % Client.letters[i],
             for j in range(BOARD_SIZE):
-                print "%-3s" % self.board[i,j],
+                print "%-3s" % self.board[i, j],
 
             print(" |||   "),
             print "%-3s" % Client.letters[i],
             for j in range(BOARD_SIZE):
-                print "%-3s" % self.enemy_board[i,j],
+                print "%-3s" % self.enemy_board[i, j],
             print
 
         print
 
     def run_client(self):
         while True:
-            r_sockets = select.select(self.all_sockets, [], [])[0]  # We won't use writable and exceptional sockets
+            # We won't use writable and exceptional sockets
+            r_sockets = select.select(self.all_sockets, [], [])[0]
             if sys.stdin in r_sockets:
                 self.__handle_standard_input()
             elif self.socket_to_server in r_sockets:
