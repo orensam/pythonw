@@ -8,8 +8,8 @@ import Protocol
 import Client
 
 MAX_CONNECTIONS = 2  # DO NOT CHANGE
-ERROR_EXIT = 1
-
+EXIT_ERROR = 1
+EXIT_OK = 0
 
 class Server:
 
@@ -42,7 +42,7 @@ class Server:
         except socket.error as msg:
             self.l_socket = None
             sys.stderr.write(repr(msg) + '\n')
-            exit(ERROR_EXIT)
+            exit(EXIT_ERROR)
 
         server_address = (self.server_name, int(self.server_port))
         try:
@@ -53,20 +53,31 @@ class Server:
             self.l_socket.close()
             self.l_socket = None
             sys.stderr.write(repr(msg) + '\n')
-            exit(ERROR_EXIT)
+            exit(EXIT_ERROR)
 
         print "*** Server is up on %s ***" % server_address[0]
         print
-
-    def shut_down_server(self):        
-        for sock in self.players_sockets:
-            sock.shutdown(socket.SHUT_RDWR)
-            sock.close()
+    
+#     def close_client(self, client_socket):
+#         #Protocol.send_all(client_socket, Client.CLOSE_PREFIX)
+#         #client_socket.shutdown(socket.SHUT_RDWR)
+#         client_socket.close()
+        
+    def shut_down_server(self, code):        
+        # Close clients            
+        for con in self.players_sockets:            
+            con.close()
+        # Close server
+        self.l_socket.shutdown(socket.SHUT_RDWR)
+        self.l_socket.close()
+        print
+        print "*** Server is down ***"
+        sys.exit(code)
 
     def __handle_standard_input(self):        
         msg = sys.stdin.readline().strip().upper()        
         if msg == 'EXIT':
-            self.shut_down_server()
+            self.shut_down_server(EXIT_OK)
 
     def __handle_new_connection(self):
         
@@ -76,17 +87,17 @@ class Server:
         eNum, eMsg = Protocol.send_all(connection, "ok_name")
         if eNum:
             sys.stderr.write(eMsg)
-            self.shut_down_server()
+            self.shut_down_server(EXIT_ERROR)
         
         # Receive new client's name
         num, msg = Protocol.recv_all(connection)
         if num == Protocol.NetworkErrorCodes.FAILURE:
             sys.stderr.write(msg)
-            self.shut_down_server()
+            self.shut_down_server(EXIT_ERROR)
 
         if num == Protocol.NetworkErrorCodes.DISCONNECTED:            
             sys.stderr.write(msg)
-            self.shut_down_server()
+            self.shut_down_server(EXIT_OK)
         
         self.players_names.append(msg)
 
@@ -105,32 +116,34 @@ class Server:
         eNum, eMsg = Protocol.send_all(self.players_sockets[player_num], welcome_msg)
         if eNum:
             sys.stderr.write(eMsg)
-            self.shut_down_server()
+            self.shut_down_server(EXIT_ERROR)
                                 
     def __handle_existing_connections(self):
-                
+        
         cur_con = self.players_sockets[self.turn]
         other_con = self.players_sockets[1 - self.turn]
         
         num, msg = Protocol.recv_all(cur_con)
         
-        if num:
-            self.shut_down_server()
+        #print "got msg from client: ", msg        
         
-        if msg.startswith(Client.ILOST_PREFIX):
-            Protocol.send_all(other_con, Client.YOUWON_PREFIX)
-            self.shut_down_server()
-        
+        if num == Protocol.NetworkErrorCodes.FAILURE:
+            sys.stderr.write(msg)
+            self.shut_down_server(EXIT_ERROR)
+
+        if num == Protocol.NetworkErrorCodes.DISCONNECTED:            
+            Protocol.send_all(other_con, Client.OP_DISC_PREFIX)
+            self.shut_down_server(EXIT_OK)
+                    
+        elif msg.startswith(Client.QUIT_PREFIX):
+            Protocol.send_all(other_con, Client.OP_DISC_PREFIX)
+            self.shut_down_server(EXIT_OK)
+            
         else:
             Protocol.send_all(self.players_sockets[1 - self.turn], msg)
         
-        self.turn = 1 - self.turn                
-    
-    def send_to_con(self, con, msg):
-        num, msg = Protocol.send_all(con, msg)
-        if num:
-            print msg
-            self.shut_down_server()        
+        if msg.startswith(Client.SHOOT_PREFIX):
+            self.turn = 1 - self.turn
         
     def run_server(self):
         
@@ -142,10 +155,10 @@ class Server:
 
             elif self.l_socket in r_sockets:
                 self.__handle_new_connection()
-
+            
             elif self.players_sockets[0] in r_sockets or \
                  self.players_sockets[1] in r_sockets:
-                    self.__handle_existing_connections() # TODO- implement this method
+                    self.__handle_existing_connections()
 
 
 def main():

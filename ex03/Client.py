@@ -7,14 +7,17 @@ import Protocol
 from Board import PlayerBoard, EnemyBoard, Ship
 
 EXIT_ERROR = 1
+EXIT_OK = 0
 BOARD_SIZE = 10
 
 SHOOT_PREFIX = "SHOOT|"
 HIT_PREFIX = "HIT|"
 MISS_PREFIX = "MISS|"
 SINK_PREFIX = "SINK|"
-ILOST_PREFIX = "ILOST|"
-YOUWON_PREFIX = "YOU_WON|"
+SINKLOST_PREFIX = "SINKLOST|"
+OP_DISC_PREFIX = "OPDISC|"
+CLOSE_PREFIX = "CLOSE|"
+QUIT_PREFIX = "QUIT|"
 
 class Client:
 
@@ -97,28 +100,24 @@ class Client:
         print "Waiting for an opponent..."
         print
 
-    def close_client(self):
-        
-        # TODO - implement 
-#         
-#         code = EXIT_ERROR
-#         if err_msg:
-#             print err_msg
-#             code = 0
-        
+    def close_client(self, code):
+        self.socket_to_server.shutdown(socket.SHUT_RDWR)
+        self.socket_to_server.close()        
+        print
         print "*** Goodbye... ***"
-        exit(EXIT_ERROR)
+        exit(code)
 
     def __handle_standard_input(self):
         
         msg = sys.stdin.readline().strip().upper()
         
         if msg == 'EXIT':  # user wants to quit
-            self.close_client()
+            self.send_quit()
+            self.close_client(EXIT_OK)
                 
         else:
             # Send letter and number
-            self.send_shoot(msg)
+            self.send_shoot(msg)            
             self.sent_row, self.sent_col = Client.coord_to_nums(msg)            
 
     def __handle_server_request(self):
@@ -132,7 +131,7 @@ class Client:
         elif msg.startswith(SHOOT_PREFIX):
             
             coord = msg[len(SHOOT_PREFIX):]
-            print "%s plays %s" %(self.opponent_name, coord)
+            print "%s plays: %s" %(self.opponent_name, coord)
             
             row, col = Client.coord_to_nums(coord)
             
@@ -141,11 +140,12 @@ class Client:
             if is_hit:
                 sunk_ship_perimeter = self.board.pop_sunk_ship()
                 if sunk_ship_perimeter:
-                    self.send_sink(sunk_ship_perimeter)
-                    if self.board.lost():                        
+                    is_lost = self.board.lost()                    
+                    self.send_sink(sunk_ship_perimeter, is_lost)
+                    if is_lost:
+                        self.print_board()                        
                         print "You lost :("                        
-                        self.send_lost()
-                        return
+                        self.close_client(EXIT_OK)
                 else:                    
                     self.send_hit()
             else:
@@ -174,10 +174,19 @@ class Client:
             for row, col in Client.coords_to_nums_list(coords):
                 self.enemy_board.add_miss(row, col)
             self.print_board()
-        
-        elif msg.startswith(YOUWON_PREFIX):
+
+        elif msg.startswith(SINKLOST_PREFIX):
+            coords = msg[len(SINKLOST_PREFIX):]
+            self.enemy_board.add_hit(self.sent_row, self.sent_col)
+            for row, col in Client.coords_to_nums_list(coords):
+                self.enemy_board.add_miss(row, col)
+            self.print_board()
             print "You won!"
-            self.close_client()
+            self.close_client(EXIT_OK)
+        
+        elif msg.startswith(OP_DISC_PREFIX):            
+            print "Your opponent has disconnected. You win!"
+            self.close_client(EXIT_OK)                
     
     def rcv_from_server(self):
         
@@ -185,11 +194,11 @@ class Client:
         
         if err_num == Protocol.NetworkErrorCodes.FAILURE:
             sys.stderr.write(msg)
-            self.close_client()
+            self.close_client(EXIT_ERROR)
 
         elif err_num == Protocol.NetworkErrorCodes.DISCONNECTED:
             print "Server has closed connection."
-            self.close_client()
+            self.close_client(EXIT_OK)
         
         else:
             return msg
@@ -197,18 +206,14 @@ class Client:
     def send_to_server(self, msg):
         
         err_num, err_msg = Protocol.send_all(self.socket_to_server, msg)
-        
-        if err_num:
-            sys.stderr.write(err_msg)
-            self.close_client()
-            
-#         if err_num == Protocol.NetworkErrorCodes.FAILURE:
-#             print err_msg
-#             self.close_client()
-#         
-#         if err_num == Protocol.NetworkErrorCodes.DISCONNECTED:
-#             print "Server has closed connection."
-#             self.close_client()
+
+        if err_num == Protocol.NetworkErrorCodes.FAILURE:
+            print err_msg
+            self.close_client(EXIT_ERROR)
+         
+        if err_num == Protocol.NetworkErrorCodes.DISCONNECTED:
+            print "Server has closed connection."
+            self.close_client(EXIT_OK)
             
     def send_hit(self):
         self.send_to_server(HIT_PREFIX)
@@ -219,12 +224,15 @@ class Client:
     def send_shoot(self, coord):
         self.send_to_server(SHOOT_PREFIX + coord)
     
-    def send_sink(self, positions):
+    def send_sink(self, positions, is_lost):
+        prefix = SINK_PREFIX
+        if is_lost:
+            prefix = SINKLOST_PREFIX
         positions_str = Client.nums_list_to_coords(positions)
-        self.send_to_server(SINK_PREFIX + positions_str)
+        self.send_to_server(prefix + positions_str)
     
-    def send_lost(self):
-        self.send_to_server(ILOST_PREFIX)
+    def send_quit(self):
+        self.send_to_server(QUIT_PREFIX)
         
     def __start_game(self, msg):
         print "Welcome " + self.player_name + "!"

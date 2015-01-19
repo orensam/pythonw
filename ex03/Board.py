@@ -43,7 +43,7 @@ class Ship(object):
 
 class Board(object):
 
-    SHIP = 'O'
+    SHIP = '0'
     HIT = 'H'
     MISS = 'X'
     EMPTY = '*'
